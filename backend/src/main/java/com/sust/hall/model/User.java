@@ -27,7 +27,7 @@ public class User {
     @NotBlank(message = "Password is required.")
     private String password;
 
-    private Roles role;
+    //private Roles role;
 
     private LocalDateTime createdAt;
     private LocalDateTime updatedAt;
