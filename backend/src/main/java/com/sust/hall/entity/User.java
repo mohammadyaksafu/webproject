@@ -4,6 +4,8 @@ import jakarta.persistence.*;
 import lombok.Data;
 import java.time.LocalDateTime;
 
+import com.sust.hall.enums.UserRole;
+
 @Data
 @Entity
 @Table(name = "users")

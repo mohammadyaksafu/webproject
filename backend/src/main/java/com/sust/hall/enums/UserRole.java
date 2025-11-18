@@ -1,4 +1,4 @@
-package com.sust.hall.entity;
+package com.sust.hall.enums;
 
 public enum UserRole {
     STUDENT,

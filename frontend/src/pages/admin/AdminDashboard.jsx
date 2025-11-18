@@ -5,10 +5,12 @@ import AdminTabs from "./components/AdminTabs";
 import PendingUsersTab from "./components/PendingUsersTab";
 import AllUsersTab from "./components/AllUsersTab";
 import CreateUserTab from "./components/CreateUserTab";
+import HallManagementTab from "./components/HallManagementTab";
 
 const AdminDashboard = () => {
   const [pendingUsers, setPendingUsers] = useState([]);
   const [allUsers, setAllUsers] = useState([]);
+  const [halls, setHalls] = useState([]);
   const [loading, setLoading] = useState(true);
   const [activeTab, setActiveTab] = useState("pending");
   const navigate = useNavigate();
@@ -34,15 +36,16 @@ const AdminDashboard = () => {
   }
 
   useEffect(() => {
-    fetchUsers();
+    fetchAllData();
   }, []);
 
-  const fetchUsers = async () => {
+  const fetchAllData = async () => {
     try {
       setLoading(true);
-      const [pendingResponse, allResponse] = await Promise.all([
+      const [pendingResponse, allResponse, hallsResponse] = await Promise.all([
         fetch('http://localhost:8080/api/admin/pending-users'),
-        fetch('http://localhost:8080/api/admin/users')
+        fetch('http://localhost:8080/api/admin/users'),
+        fetch('http://localhost:8080/api/halls')
       ]);
 
       if (pendingResponse.ok) {
@@ -54,8 +57,13 @@ const AdminDashboard = () => {
         const allData = await allResponse.json();
         setAllUsers(allData);
       }
+
+      if (hallsResponse.ok) {
+        const hallsData = await hallsResponse.json();
+        setHalls(hallsData);
+      }
     } catch (error) {
-      console.error('Error fetching users:', error);
+      console.error('Error fetching data:', error);
     } finally {
       setLoading(false);
     }
@@ -68,7 +76,7 @@ const AdminDashboard = () => {
       });
 
       if (response.ok) {
-        fetchUsers();
+        fetchAllData();
       }
     } catch (error) {
       console.error('Error approving user:', error);
@@ -82,7 +90,7 @@ const AdminDashboard = () => {
       });
 
       if (response.ok) {
-        fetchUsers();
+        fetchAllData();
       }
     } catch (error) {
       console.error('Error rejecting user:', error);
@@ -100,7 +108,7 @@ const AdminDashboard = () => {
       });
 
       if (response.ok) {
-        fetchUsers();
+        fetchAllData();
       }
     } catch (error) {
       console.error('Error updating role:', error);
@@ -115,7 +123,7 @@ const AdminDashboard = () => {
         });
 
         if (response.ok) {
-          fetchUsers();
+          fetchAllData();
         }
       } catch (error) {
         console.error('Error deleting user:', error);
@@ -134,13 +142,96 @@ const AdminDashboard = () => {
       });
 
       if (response.ok) {
-        fetchUsers();
+        fetchAllData();
         setActiveTab("all");
         return true;
       }
       return false;
     } catch (error) {
       console.error('Error creating user:', error);
+      return false;
+    }
+  };
+
+  // Hall Management Functions
+  const handleCreateHall = async (hallData) => {
+    try {
+      const response = await fetch('http://localhost:8080/api/halls', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(hallData)
+      });
+
+      if (response.ok) {
+        fetchAllData();
+        return true;
+      }
+      return false;
+    } catch (error) {
+      console.error('Error creating hall:', error);
+      return false;
+    }
+  };
+
+  const handleUpdateHall = async (id, hallData) => {
+    try {
+      const response = await fetch(`http://localhost:8080/api/halls/${id}`, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(hallData)
+      });
+
+      if (response.ok) {
+        fetchAllData();
+        return true;
+      }
+      return false;
+    } catch (error) {
+      console.error('Error updating hall:', error);
+      return false;
+    }
+  };
+
+  const handleDeleteHall = async (id) => {
+    if (window.confirm('Are you sure you want to delete this hall?')) {
+      try {
+        const response = await fetch(`http://localhost:8080/api/halls/${id}`, {
+          method: 'DELETE'
+        });
+
+        if (response.ok) {
+          fetchAllData();
+          return true;
+        }
+        return false;
+      } catch (error) {
+        console.error('Error deleting hall:', error);
+        return false;
+      }
+    }
+  };
+
+  const handleUpdateOccupancy = async (id, occupancy) => {
+    try {
+      const response = await fetch(`http://localhost:8080/api/halls/${id}/occupancy`, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ occupancy })
+      });
+
+      if (response.ok) {
+        fetchAllData();
+        return true;
+      }
+      return false;
+    } catch (error) {
+      console.error('Error updating occupancy:', error);
       return false;
     }
   };
@@ -165,6 +256,7 @@ const AdminDashboard = () => {
           setActiveTab={setActiveTab}
           pendingCount={pendingUsers.length}
           allCount={allUsers.length}
+          hallsCount={halls.length}
         />
 
         {/* Pending Users Tab */}
@@ -190,6 +282,17 @@ const AdminDashboard = () => {
         {/* Create User Tab */}
         {activeTab === "create" && (
           <CreateUserTab onCreateUser={handleCreateUser} />
+        )}
+
+        {/* Hall Management Tab */}
+        {activeTab === "halls" && (
+          <HallManagementTab 
+            halls={halls}
+            onCreateHall={handleCreateHall}
+            onUpdateHall={handleUpdateHall}
+            onDeleteHall={handleDeleteHall}
+            onUpdateOccupancy={handleUpdateOccupancy}
+          />
         )}
       </div>
     </div>

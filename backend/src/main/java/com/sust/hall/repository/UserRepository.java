@@ -1,7 +1,7 @@
 package com.sust.hall.repository;
 
 import com.sust.hall.entity.User;
-import com.sust.hall.entity.UserRole;
+import com.sust.hall.enums.UserRole;
 import com.sust.hall.entity.AccountStatus;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.jdbc.core.RowMapper;
@@ -28,7 +28,6 @@ public class UserRepository {
 
     public User save(User user) {
         if (user.getId() == null) {
-            // Set createdAt before saving
             if (user.getCreatedAt() == null) {
                 user.setCreatedAt(LocalDateTime.now());
             }
@@ -51,7 +50,7 @@ public class UserRepository {
             user.setId(keyHolder.getKey().longValue());
             return user;
         } else {
-            // Update existing user
+            
             String sql = "UPDATE users SET name = ?, email = ?, hall_name = ?, role = ?, password = ?, account_status = ? WHERE id = ?";
             jdbcTemplate.update(sql, 
                 user.getName(), 
@@ -136,7 +135,7 @@ public class UserRepository {
             });
     }
 
-    // NEW METHODS FOR ADMIN FUNCTIONALITY
+   
 
     public List<User> findUsersByAccountStatus(AccountStatus status) {
         String sql = "SELECT * FROM users WHERE account_status = ?";
@@ -162,7 +161,7 @@ public class UserRepository {
         return jdbcTemplate.update(sql, role.name(), status.name(), id);
     }
 
-    // Updated RowMapper to include account_status
+    
     private static class UserRowMapper implements RowMapper<User> {
         @Override
         public User mapRow(ResultSet rs, int rowNum) throws SQLException {
@@ -179,10 +178,10 @@ public class UserRepository {
             if (accountStatusStr != null) {
                 user.setAccountStatus(AccountStatus.valueOf(accountStatusStr));
             } else {
-                user.setAccountStatus(AccountStatus.PENDING); // Default for existing records
+                user.setAccountStatus(AccountStatus.PENDING); 
             }
             
-            // Handle created_at
+          
             Timestamp timestamp = rs.getTimestamp("created_at");
             if (timestamp != null) {
                 user.setCreatedAt(timestamp.toLocalDateTime());

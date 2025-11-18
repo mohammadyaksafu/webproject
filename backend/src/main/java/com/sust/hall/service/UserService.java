@@ -3,7 +3,7 @@ package com.sust.hall.service;
 import com.sust.hall.dto.RegisterRequest;
 import com.sust.hall.entity.AccountStatus;
 import com.sust.hall.entity.User;
-import com.sust.hall.entity.UserRole;
+import com.sust.hall.enums.UserRole;
 import com.sust.hall.repository.UserRepository;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
