@@ -1,8 +1,9 @@
 package com.sust.hall.repository;
 
 import com.sust.hall.entity.User;
+import com.sust.hall.enums.AccountStatus;
 import com.sust.hall.enums.UserRole;
-import com.sust.hall.entity.AccountStatus;
+
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.jdbc.core.RowMapper;
 import org.springframework.jdbc.support.GeneratedKeyHolder;
@@ -16,6 +17,7 @@ import java.sql.Statement;
 import java.sql.Timestamp;
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.Optional;
 
 @Repository
 public class UserRepository {
@@ -50,7 +52,6 @@ public class UserRepository {
             user.setId(keyHolder.getKey().longValue());
             return user;
         } else {
-            
             String sql = "UPDATE users SET name = ?, email = ?, hall_name = ?, role = ?, password = ?, account_status = ? WHERE id = ?";
             jdbcTemplate.update(sql, 
                 user.getName(), 
@@ -64,9 +65,35 @@ public class UserRepository {
         }
     }
 
+    public Optional<User> findByEmail(String email) {
+        String sql = "SELECT * FROM users WHERE email = ?";
+        try {
+            User user = jdbcTemplate.queryForObject(sql, new UserRowMapper(), email);
+            return Optional.ofNullable(user);
+        } catch (Exception e) {
+            return Optional.empty();
+        }
+    }
+
+    public Optional<User> findById(Long id) {
+        String sql = "SELECT * FROM users WHERE id = ?";
+        try {
+            User user = jdbcTemplate.queryForObject(sql, new UserRowMapper(), id);
+            return Optional.ofNullable(user);
+        } catch (Exception e) {
+            return Optional.empty();
+        }
+    }
+
     public boolean existsByEmail(String email) {
         String sql = "SELECT COUNT(*) FROM users WHERE email = ?";
         Integer count = jdbcTemplate.queryForObject(sql, Integer.class, email);
+        return count != null && count > 0;
+    }
+
+    public boolean existsById(Long id) {
+        String sql = "SELECT COUNT(*) FROM users WHERE id = ?";
+        Integer count = jdbcTemplate.queryForObject(sql, Integer.class, id);
         return count != null && count > 0;
     }
 
@@ -75,28 +102,31 @@ public class UserRepository {
         return jdbcTemplate.update(sql, name, email, hallName, role.name(), AccountStatus.PENDING.name());
     }
 
-    public List<User> findAllUsers() {
-        String sql = "SELECT * FROM users";
+    public List<User> findAll() {
+        String sql = "SELECT * FROM users ORDER BY created_at DESC";
         return jdbcTemplate.query(sql, new UserRowMapper());
     }
 
+    public List<User> findAllUsers() {
+        return findAll();
+    }
+
     public User findUserById(Long id) {
-        String sql = "SELECT * FROM users WHERE id = ?";
-        return jdbcTemplate.queryForObject(sql, new UserRowMapper(), id);
+        return findById(id).orElse(null);
     }
 
     public List<User> findUsersByHall(String hallName) {
-        String sql = "SELECT * FROM users WHERE hall_name = ?";
+        String sql = "SELECT * FROM users WHERE hall_name = ? ORDER BY name";
         return jdbcTemplate.query(sql, new UserRowMapper(), hallName);
     }
 
     public List<User> findUsersByRole(UserRole role) {
-        String sql = "SELECT * FROM users WHERE role = ?";
+        String sql = "SELECT * FROM users WHERE role = ? ORDER BY name";
         return jdbcTemplate.query(sql, new UserRowMapper(), role.name());
     }
 
     public List<User> findUsersByHallAndRole(String hallName, UserRole role) {
-        String sql = "SELECT * FROM users WHERE hall_name = ? AND role = ?";
+        String sql = "SELECT * FROM users WHERE hall_name = ? AND role = ? ORDER BY name";
         return jdbcTemplate.query(sql, new UserRowMapper(), hallName, role.name());
     }
 
@@ -105,13 +135,18 @@ public class UserRepository {
         return jdbcTemplate.update(sql, name, email, hallName, role.name(), id);
     }
 
+    public int updateUserPassword(Long id, String password) {
+        String sql = "UPDATE users SET password = ? WHERE id = ?";
+        return jdbcTemplate.update(sql, password, id);
+    }
+
     public int deleteUser(Long id) {
         String sql = "DELETE FROM users WHERE id = ?";
         return jdbcTemplate.update(sql, id);
     }
 
     public List<String> findAllHallNames() {
-        String sql = "SELECT DISTINCT hall_name FROM users";
+        String sql = "SELECT DISTINCT hall_name FROM users WHERE hall_name IS NOT NULL ORDER BY hall_name";
         return jdbcTemplate.queryForList(sql, String.class);
     }
 
@@ -120,10 +155,26 @@ public class UserRepository {
         return jdbcTemplate.queryForObject(sql, Integer.class, hallName);
     }
 
+    public Integer countAllUsers() {
+        String sql = "SELECT COUNT(*) FROM users";
+        return jdbcTemplate.queryForObject(sql, Integer.class);
+    }
+
+    public Integer countUsersByStatus(AccountStatus status) {
+        String sql = "SELECT COUNT(*) FROM users WHERE account_status = ?";
+        return jdbcTemplate.queryForObject(sql, Integer.class, status.name());
+    }
+
+    public Integer countUsersByRole(UserRole role) {
+        String sql = "SELECT COUNT(*) FROM users WHERE role = ?";
+        return jdbcTemplate.queryForObject(sql, Integer.class, role.name());
+    }
+
     public List<Object[]> getUserStatisticsByHall() {
         String sql = """
             SELECT hall_name, role, COUNT(*) as count 
             FROM users 
+            WHERE hall_name IS NOT NULL
             GROUP BY hall_name, role 
             ORDER BY hall_name, role
             """;
@@ -135,15 +186,39 @@ public class UserRepository {
             });
     }
 
-   
+    public List<Object[]> getUserStatisticsByStatus() {
+        String sql = """
+            SELECT account_status, COUNT(*) as count 
+            FROM users 
+            GROUP BY account_status 
+            ORDER BY account_status
+            """;
+        return jdbcTemplate.query(sql, (rs, rowNum) -> 
+            new Object[]{
+                rs.getString("account_status"),
+                rs.getInt("count")
+            });
+    }
 
     public List<User> findUsersByAccountStatus(AccountStatus status) {
-        String sql = "SELECT * FROM users WHERE account_status = ?";
+        String sql = "SELECT * FROM users WHERE account_status = ? ORDER BY created_at DESC";
         return jdbcTemplate.query(sql, new UserRowMapper(), status.name());
     }
 
     public List<User> findPendingUsers() {
         return findUsersByAccountStatus(AccountStatus.PENDING);
+    }
+
+    public List<User> findApprovedUsers() {
+        return findUsersByAccountStatus(AccountStatus.APPROVED);
+    }
+
+    public List<User> findRejectedUsers() {
+        return findUsersByAccountStatus(AccountStatus.REJECTED);
+    }
+
+    public List<User> findSuspendedUsers() {
+        return findUsersByAccountStatus(AccountStatus.SUSPENDED);
     }
 
     public int updateUserStatus(Long id, AccountStatus status) {
@@ -161,7 +236,91 @@ public class UserRepository {
         return jdbcTemplate.update(sql, role.name(), status.name(), id);
     }
 
-    
+    public int updateUserHall(Long id, String hallName) {
+        String sql = "UPDATE users SET hall_name = ? WHERE id = ?";
+        return jdbcTemplate.update(sql, hallName, id);
+    }
+
+    public List<User> searchUsers(String searchTerm) {
+        String sql = "SELECT * FROM users WHERE name LIKE ? OR email LIKE ? OR hall_name LIKE ? ORDER BY name";
+        String likeTerm = "%" + searchTerm + "%";
+        return jdbcTemplate.query(sql, new UserRowMapper(), likeTerm, likeTerm, likeTerm);
+    }
+
+    public List<User> findUsersWithPagination(int offset, int limit) {
+        String sql = "SELECT * FROM users ORDER BY created_at DESC LIMIT ? OFFSET ?";
+        return jdbcTemplate.query(sql, new UserRowMapper(), limit, offset);
+    }
+
+    public List<User> findUsersByRoleAndStatus(UserRole role, AccountStatus status) {
+        String sql = "SELECT * FROM users WHERE role = ? AND account_status = ? ORDER BY name";
+        return jdbcTemplate.query(sql, new UserRowMapper(), role.name(), status.name());
+    }
+
+    public int bulkUpdateUserStatus(List<Long> userIds, AccountStatus status) {
+        String sql = "UPDATE users SET account_status = ? WHERE id = ?";
+        int[][] results = jdbcTemplate.batchUpdate(sql, userIds, userIds.size(), 
+            (ps, userId) -> {
+                ps.setString(1, status.name());
+                ps.setLong(2, userId);
+            });
+        return results.length;
+    }
+
+    public int approveUser(Long id) {
+        return updateUserStatus(id, AccountStatus.APPROVED);
+    }
+
+    public int rejectUser(Long id) {
+        return updateUserStatus(id, AccountStatus.REJECTED);
+    }
+
+    public int suspendUser(Long id) {
+        return updateUserStatus(id, AccountStatus.SUSPENDED);
+    }
+
+    public int setUserPending(Long id) {
+        return updateUserStatus(id, AccountStatus.PENDING);
+    }
+
+    // Convenience method to check if user is approved (active)
+    public boolean isUserApproved(Long id) {
+        String sql = "SELECT COUNT(*) FROM users WHERE id = ? AND account_status = 'APPROVED'";
+        Integer count = jdbcTemplate.queryForObject(sql, Integer.class, id);
+        return count != null && count > 0;
+    }
+
+    // Get users who are approved and belong to a specific hall
+    public List<User> findApprovedUsersByHall(String hallName) {
+        String sql = "SELECT * FROM users WHERE hall_name = ? AND account_status = 'APPROVED' ORDER BY name";
+        return jdbcTemplate.query(sql, new UserRowMapper(), hallName);
+    }
+
+    // Count approved users by hall
+    public Integer countApprovedUsersByHall(String hallName) {
+        String sql = "SELECT COUNT(*) FROM users WHERE hall_name = ? AND account_status = 'APPROVED'";
+        return jdbcTemplate.queryForObject(sql, Integer.class, hallName);
+    }
+
+    // Get user count by each status
+    public List<Object[]> getUserCountByAllStatuses() {
+        String sql = """
+            SELECT 
+                SUM(CASE WHEN account_status = 'PENDING' THEN 1 ELSE 0 END) as pending_count,
+                SUM(CASE WHEN account_status = 'APPROVED' THEN 1 ELSE 0 END) as approved_count,
+                SUM(CASE WHEN account_status = 'REJECTED' THEN 1 ELSE 0 END) as rejected_count,
+                SUM(CASE WHEN account_status = 'SUSPENDED' THEN 1 ELSE 0 END) as suspended_count
+            FROM users
+            """;
+        return jdbcTemplate.query(sql, (rs, rowNum) -> 
+            new Object[]{
+                rs.getInt("pending_count"),
+                rs.getInt("approved_count"),
+                rs.getInt("rejected_count"),
+                rs.getInt("suspended_count")
+            });
+    }
+
     private static class UserRowMapper implements RowMapper<User> {
         @Override
         public User mapRow(ResultSet rs, int rowNum) throws SQLException {
@@ -173,7 +332,7 @@ public class UserRepository {
             user.setRole(UserRole.valueOf(rs.getString("role")));
             user.setPassword(rs.getString("password"));
             
-            // Handle account_status (with fallback for existing records)
+            // Handle account_status with the new enum values
             String accountStatusStr = rs.getString("account_status");
             if (accountStatusStr != null) {
                 user.setAccountStatus(AccountStatus.valueOf(accountStatusStr));
@@ -181,7 +340,6 @@ public class UserRepository {
                 user.setAccountStatus(AccountStatus.PENDING); 
             }
             
-          
             Timestamp timestamp = rs.getTimestamp("created_at");
             if (timestamp != null) {
                 user.setCreatedAt(timestamp.toLocalDateTime());

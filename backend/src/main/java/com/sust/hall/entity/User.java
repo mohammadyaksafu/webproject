@@ -4,6 +4,7 @@ import jakarta.persistence.*;
 import lombok.Data;
 import java.time.LocalDateTime;
 
+import com.sust.hall.enums.AccountStatus;
 import com.sust.hall.enums.UserRole;
 
 @Data
