@@ -3,7 +3,6 @@ package com.sust.hall.repository;
 import com.sust.hall.entity.User;
 import com.sust.hall.enums.AccountStatus;
 import com.sust.hall.enums.UserRole;
-
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.jdbc.core.RowMapper;
 import org.springframework.jdbc.support.GeneratedKeyHolder;
@@ -85,6 +84,10 @@ public class UserRepository {
         }
     }
 
+    public User findUserById(Long id) {
+        return findById(id).orElse(null);
+    }
+
     public boolean existsByEmail(String email) {
         String sql = "SELECT COUNT(*) FROM users WHERE email = ?";
         Integer count = jdbcTemplate.queryForObject(sql, Integer.class, email);
@@ -97,11 +100,6 @@ public class UserRepository {
         return count != null && count > 0;
     }
 
-    public int createUser(String name, String email, String hallName, UserRole role) {
-        String sql = "INSERT INTO users (name, email, hall_name, role, account_status) VALUES (?, ?, ?, ?, ?)";
-        return jdbcTemplate.update(sql, name, email, hallName, role.name(), AccountStatus.PENDING.name());
-    }
-
     public List<User> findAll() {
         String sql = "SELECT * FROM users ORDER BY created_at DESC";
         return jdbcTemplate.query(sql, new UserRowMapper());
@@ -109,10 +107,6 @@ public class UserRepository {
 
     public List<User> findAllUsers() {
         return findAll();
-    }
-
-    public User findUserById(Long id) {
-        return findById(id).orElse(null);
     }
 
     public List<User> findUsersByHall(String hallName) {
@@ -283,26 +277,22 @@ public class UserRepository {
         return updateUserStatus(id, AccountStatus.PENDING);
     }
 
-    // Convenience method to check if user is approved (active)
     public boolean isUserApproved(Long id) {
         String sql = "SELECT COUNT(*) FROM users WHERE id = ? AND account_status = 'APPROVED'";
         Integer count = jdbcTemplate.queryForObject(sql, Integer.class, id);
         return count != null && count > 0;
     }
 
-    // Get users who are approved and belong to a specific hall
     public List<User> findApprovedUsersByHall(String hallName) {
         String sql = "SELECT * FROM users WHERE hall_name = ? AND account_status = 'APPROVED' ORDER BY name";
         return jdbcTemplate.query(sql, new UserRowMapper(), hallName);
     }
 
-    // Count approved users by hall
     public Integer countApprovedUsersByHall(String hallName) {
         String sql = "SELECT COUNT(*) FROM users WHERE hall_name = ? AND account_status = 'APPROVED'";
         return jdbcTemplate.queryForObject(sql, Integer.class, hallName);
     }
 
-    // Get user count by each status
     public List<Object[]> getUserCountByAllStatuses() {
         String sql = """
             SELECT 
@@ -332,7 +322,6 @@ public class UserRepository {
             user.setRole(UserRole.valueOf(rs.getString("role")));
             user.setPassword(rs.getString("password"));
             
-            // Handle account_status with the new enum values
             String accountStatusStr = rs.getString("account_status");
             if (accountStatusStr != null) {
                 user.setAccountStatus(AccountStatus.valueOf(accountStatusStr));
