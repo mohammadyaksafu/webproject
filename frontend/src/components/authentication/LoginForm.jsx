@@ -42,14 +42,36 @@ const LoginForm = () => {
         const user = users.find(u => u.email === email);
         
         if (user) {
+          // Check if user account is approved
+          if (user.accountStatus !== 'APPROVED') {
+            switch (user.accountStatus) {
+              case 'PENDING':
+                setError("Your account is pending approval. Please wait for admin approval.");
+                break;
+              case 'REJECTED':
+                setError("Your account has been rejected. Please contact administration.");
+                break;
+              case 'SUSPENDED':
+                setError("Your account has been suspended. Please contact administration.");
+                break;
+              default:
+                setError("Your account is not approved for login.");
+            }
+            return;
+          }
+
           console.log("Login Successful:", user);
           
           // Store user info in localStorage
           localStorage.setItem('user', JSON.stringify(user));
           localStorage.setItem('isAuthenticated', 'true');
           
-          // Redirect to dashboard
-          navigate('/dashboard');
+          // Redirect based on role
+          if (user.role === 'ADMIN') {
+            navigate('/admin');
+          } else {
+            navigate('/dashboard');
+          }
         } else {
           setError("Invalid email or password.");
         }
@@ -78,7 +100,13 @@ const LoginForm = () => {
 
         {/* Error Message */}
         {error && (
-          <div className="bg-red-900/50 border border-red-700 text-red-200 px-4 py-3 rounded-lg mb-6 text-sm">
+          <div className={`px-4 py-3 rounded-lg mb-6 text-sm ${
+            error.includes("pending approval") 
+              ? "bg-yellow-900/50 border border-yellow-700 text-yellow-200"
+              : error.includes("successful") 
+              ? "bg-green-900/50 border border-green-700 text-green-200"
+              : "bg-red-900/50 border border-red-700 text-red-200"
+          }`}>
             {error}
           </div>
         )}
@@ -175,7 +203,7 @@ const LoginForm = () => {
             Access restricted to SUST students and faculty
           </p>
           <p className="text-xs text-gray-500 mt-1">
-            Test with: ahmad.abdullah@sust.edu
+            New accounts require admin approval before login
           </p>
         </div>
       </form>

@@ -7,7 +7,8 @@ import Dashboard from "./pages/student/Dashboard";
 import Meal from "./pages/student/Meal";
 import Complaint from "./pages/student/Complaint";
 import Notification from "./pages/student/Notification";
-import ProtectedRoute from "./components/ProtectedRoute";
+import AdminDashboard from "./pages/admin/AdminDashboard";
+import ProtectedRoute from "./components/authentication/ProtectedRoute";
 
 export const routes = [
   { path: "/", element: <Home /> },
@@ -15,6 +16,14 @@ export const routes = [
   { path: "/contact", element: <Contact /> },
   { path: "/login", element: <Login /> },
   { path: "/register", element: <Register /> },
+  { 
+    path: "/admin", 
+    element: (
+      <ProtectedRoute>
+        <AdminDashboard />
+      </ProtectedRoute>
+    ) 
+  },
   { 
     path: "/dashboard", 
     element: (

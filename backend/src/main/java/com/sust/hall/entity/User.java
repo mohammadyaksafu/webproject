@@ -24,10 +24,14 @@ public class User {
 
     @Enumerated(EnumType.STRING)
     @Column(nullable = false)
-    private UserRole role = UserRole.STUDENT; 
+    private UserRole role = UserRole.STUDENT;
 
     @Column(nullable = false)
     private String password;
+
+    @Enumerated(EnumType.STRING)
+    @Column(name = "account_status", nullable = false)
+    private AccountStatus accountStatus = AccountStatus.PENDING;
 
     @Column(name = "created_at")
     private LocalDateTime createdAt;
