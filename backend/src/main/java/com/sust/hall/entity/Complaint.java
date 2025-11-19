@@ -1,12 +1,14 @@
 package com.sust.hall.entity;
 
 import com.fasterxml.jackson.annotation.JsonFormat;
-import com.sust.hall.entity.User;
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Size;
 import java.time.LocalDateTime;
+import java.util.ArrayList;
+import java.util.List;
 
 @Entity
 @Table(name = "complaints")
@@ -41,10 +43,14 @@ public class Complaint {
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "user_id", nullable = false)
+    @JsonIgnore
     private User user;
 
-    @Column(length = 500)
+    @Column(length = 1000)
     private String adminResponse;
+
+    @Column(name = "responded_by")
+    private Long respondedBy; // Admin/Teacher ID who responded
 
     @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss")
     @Column(nullable = false)
@@ -55,6 +61,9 @@ public class Complaint {
 
     @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss")
     private LocalDateTime resolvedAt;
+
+    @OneToMany(mappedBy = "complaint", cascade = CascadeType.ALL, orphanRemoval = true)
+    private List<ComplaintNote> notes = new ArrayList<>();
 
     // Enums
     public enum Priority {
@@ -77,6 +86,27 @@ public class Complaint {
         this.category = category;
         this.priority = priority;
         this.user = user;
+    }
+
+    // Helper methods
+    public void addNote(String note, Long authorId) {
+        ComplaintNote complaintNote = new ComplaintNote(note, authorId, this);
+        this.notes.add(complaintNote);
+    }
+
+    public void updateStatus(Status newStatus, Long updatedBy, String note) {
+        this.status = newStatus;
+        if (note != null && !note.trim().isEmpty()) {
+            addNote("Status changed to " + newStatus + ": " + note, updatedBy);
+        }
+    }
+
+    public void setAdminResponse(String adminResponse, Long respondedBy) {
+        this.adminResponse = adminResponse;
+        this.respondedBy = respondedBy;
+        if (adminResponse != null && !adminResponse.trim().isEmpty()) {
+            addNote("Admin response added: " + adminResponse, respondedBy);
+        }
     }
 
     // Pre-update callback
@@ -113,6 +143,9 @@ public class Complaint {
     public String getAdminResponse() { return adminResponse; }
     public void setAdminResponse(String adminResponse) { this.adminResponse = adminResponse; }
 
+    public Long getRespondedBy() { return respondedBy; }
+    public void setRespondedBy(Long respondedBy) { this.respondedBy = respondedBy; }
+
     public LocalDateTime getCreatedAt() { return createdAt; }
     public void setCreatedAt(LocalDateTime createdAt) { this.createdAt = createdAt; }
 
@@ -121,4 +154,7 @@ public class Complaint {
 
     public LocalDateTime getResolvedAt() { return resolvedAt; }
     public void setResolvedAt(LocalDateTime resolvedAt) { this.resolvedAt = resolvedAt; }
+
+    public List<ComplaintNote> getNotes() { return notes; }
+    public void setNotes(List<ComplaintNote> notes) { this.notes = notes; }
 }

@@ -1,9 +1,7 @@
 package com.sust.hall.controller;
 
-import com.sust.hall.dto.ComplaintRequestDTO;
-import com.sust.hall.dto.ComplaintResponseDTO;
+import com.sust.hall.dto.*;
 import com.sust.hall.service.ComplaintService;
-
 import jakarta.validation.Valid;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -45,15 +43,32 @@ public class ComplaintController {
         return ResponseEntity.ok(complaintService.getUserComplaints(userId));
     }
 
-    // Admin updates complaint status
+    // Get complaints by status
+    @GetMapping("/status/{status}")
+    public ResponseEntity<List<ComplaintResponseDTO>> getComplaintsByStatus(@PathVariable String status) {
+        return ResponseEntity.ok(complaintService.getComplaintsByStatus(status));
+    }
+
+    // Get complaints by category
+    @GetMapping("/category/{category}")
+    public ResponseEntity<List<ComplaintResponseDTO>> getComplaintsByCategory(@PathVariable String category) {
+        return ResponseEntity.ok(complaintService.getComplaintsByCategory(category));
+    }
+
+    // Admin/Teacher updates complaint status with response and note
     @PutMapping("/{id}/status")
     public ResponseEntity<ComplaintResponseDTO> updateStatus(
             @PathVariable Long id,
-            @RequestParam String status,
-            @RequestParam(required = false) String adminResponse) {
+            @Valid @RequestBody StatusUpdateRequestDTO updateRequest) {
+        return ResponseEntity.ok(complaintService.updateComplaintStatus(id, updateRequest));
+    }
 
-        return ResponseEntity.ok(
-                complaintService.updateComplaintStatus(id, status, adminResponse));
+    // Add note to complaint
+    @PostMapping("/{id}/notes")
+    public ResponseEntity<ComplaintResponseDTO> addNote(
+            @PathVariable Long id,
+            @Valid @RequestBody AddNoteRequestDTO noteRequest) {
+        return ResponseEntity.ok(complaintService.addNoteToComplaint(id, noteRequest));
     }
 
     // Delete complaint

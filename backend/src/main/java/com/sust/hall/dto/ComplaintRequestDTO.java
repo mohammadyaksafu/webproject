@@ -6,21 +6,21 @@ import jakarta.validation.constraints.Size;
 
 public class ComplaintRequestDTO {
 
-    @NotBlank
-    @Size(max = 200)
+    @NotBlank(message = "Title is required")
+    @Size(max = 200, message = "Title must not exceed 200 characters")
     private String title;
 
-    @NotBlank
-    @Size(max = 1000)
+    @NotBlank(message = "Description is required")
+    @Size(max = 1000, message = "Description must not exceed 1000 characters")
     private String description;
 
-    @NotBlank
+    @NotBlank(message = "Category is required")
     private String category;
 
-    @NotNull
+    @NotNull(message = "Priority is required")
     private String priority;
 
-    @NotNull
+    @NotNull(message = "User ID is required")
     private Long userId;
 
     // Getters & Setters

@@ -1,88 +1,71 @@
-import React from "react";
-import { Link } from "react-router-dom";
+import getRoleBasedNav from "./RolebasedNav";
 
 const AuthenticatedNav = ({ user, isActiveRoute, handleLogout }) => {
-  return (
-    <>
-      {/* Dashboard Link */}
-      <Link 
-        to="/dashboard" 
-        className={`px-3 py-2 rounded-md font-medium transition-colors duration-200 ${
-          isActiveRoute('/dashboard') 
-            ? 'bg-[#00df9a] text-black' 
-            : 'hover:text-[#00df9a]'
-        }`}
-      >
-        Dashboard
-      </Link>
+    const navItems = getRoleBasedNav();
 
-      {/* Admin Link - Only for ADMIN users */}
-      {user.role === 'ADMIN' && (
-        <Link 
-          to="/admin" 
-          className={`px-3 py-2 rounded-md font-medium transition-colors duration-200 ${
-            isActiveRoute('/admin') 
-              ? 'bg-[#00df9a] text-black' 
-              : 'hover:text-[#00df9a]'
-          }`}
-        >
-          Admin
-        </Link>
-      )}
-
-      {/* Meal Link */}
-      <Link 
-        to="/meal" 
-        className={`px-3 py-2 rounded-md font-medium transition-colors duration-200 ${
-          isActiveRoute('/meal') 
-            ? 'bg-[#00df9a] text-black' 
-            : 'hover:text-[#00df9a]'
-        }`}
-      >
-        Meal
-      </Link>
-
-      {/* Complaint Link */}
-      <Link 
-        to="/complaint" 
-        className={`px-3 py-2 rounded-md font-medium transition-colors duration-200 ${
-          isActiveRoute('/complaint') 
-            ? 'bg-[#00df9a] text-black' 
-            : 'hover:text-[#00df9a]'
-        }`}
-      >
-        Complaint
-      </Link>
-
-      {/* Notification Link */}
-      <Link 
-        to="/notification" 
-        className={`px-3 py-2 rounded-md font-medium transition-colors duration-200 ${
-          isActiveRoute('/notification') 
-            ? 'bg-[#00df9a] text-black' 
-            : 'hover:text-[#00df9a]'
-        }`}
-      >
-        Notification
-      </Link>
-
-      {/* User Info & Logout */}
-      <div className="flex items-center gap-4 ml-4 pl-4 border-l border-gray-700">
-        <div className="flex items-center gap-2">
-          <span className="text-gray-300 text-sm">Welcome, {user.name}</span>
-          <span className="bg-[#00df9a] text-black px-2 py-1 rounded text-xs font-semibold">
-            {user.role}
-          </span>
+    return (
+      <>
+        {navItems.map((item) => (
+          <a
+            key={item.path}
+            href={item.path}
+            className={`flex items-center gap-2 px-3 py-2 rounded-lg transition-colors duration-200 ${
+              isActiveRoute(item.path)
+                ? "bg-[#00df9a] text-black font-semibold"
+                : "text-gray-300 hover:text-white hover:bg-gray-800"
+            }`}
+            onClick={closeAllMenus}
+          >
+            <span>{item.icon}</span>
+            {item.label}
+          </a>
+        ))}
+        
+        {/* User dropdown */}
+        <div className="relative group">
+          <button className="flex items-center gap-2 px-3 py-2 text-gray-300 hover:text-white hover:bg-gray-800 rounded-lg transition-colors duration-200">
+            <span className="w-8 h-8 bg-[#00df9a] rounded-full flex items-center justify-center text-black font-semibold text-sm">
+              {user.name?.charAt(0) || 'U'}
+            </span>
+            <span>{user.name}</span>
+            <span>▼</span>
+          </button>
+          
+          {/* Dropdown menu */}
+          <div className="absolute right-0 top-full mt-2 w-48 bg-gray-800 border border-gray-700 rounded-lg shadow-lg opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200">
+            <div className="p-2">
+              <div className="px-3 py-2 text-sm text-gray-300 border-b border-gray-700">
+                <p className="font-semibold">{user.name}</p>
+                <p className="text-xs text-[#00df9a]">{user.role}</p>
+              </div>
+              
+              <a
+                href="/profile"
+                className="flex items-center gap-2 px-3 py-2 text-sm text-gray-300 hover:bg-gray-700 rounded-md transition-colors duration-200"
+                onClick={closeAllMenus}
+              >
+                👤 Profile
+              </a>
+              
+              <a
+                href="/settings"
+                className="flex items-center gap-2 px-3 py-2 text-sm text-gray-300 hover:bg-gray-700 rounded-md transition-colors duration-200"
+                onClick={closeAllMenus}
+              >
+                ⚙️ Settings
+              </a>
+              
+              <button
+                onClick={handleLogout}
+                className="w-full flex items-center gap-2 px-3 py-2 text-sm text-red-400 hover:bg-gray-700 rounded-md transition-colors duration-200 text-left"
+              >
+                🚪 Logout
+              </button>
+            </div>
+          </div>
         </div>
-        <button 
-          onClick={handleLogout}
-          className="border border-red-500 text-red-500 px-3 py-1 rounded-md font-semibold hover:bg-red-500 hover:text-white transition-colors duration-200 text-sm"
-        >
-          Logout
-        </button>
-      </div>
-    </>
-  );
-};
+      </>
+    );
+  };
 
 export default AuthenticatedNav;

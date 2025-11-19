@@ -135,6 +135,36 @@ public class HallRepository {
         return findByType(HallType.FEMALE);
     }
 
+    /**
+     * Check if a hall exists by ID
+     * @param hallId the hall ID
+     * @return true if hall exists with is_active = true, false otherwise
+     */
+    public boolean existsById(Long hallId) {
+        String sql = "SELECT COUNT(*) FROM halls WHERE id = ? AND is_active = true";
+        try {
+            Integer count = jdbcTemplate.queryForObject(sql, Integer.class, hallId);
+            return count != null && count > 0;
+        } catch (Exception e) {
+            return false;
+        }
+    }
+
+    /**
+     * Check if a hall exists (including inactive halls)
+     * @param hallId the hall ID
+     * @return true if hall exists regardless of active status
+     */
+    public boolean existsByIdIncludingInactive(Long hallId) {
+        String sql = "SELECT COUNT(*) FROM halls WHERE id = ?";
+        try {
+            Integer count = jdbcTemplate.queryForObject(sql, Integer.class, hallId);
+            return count != null && count > 0;
+        } catch (Exception e) {
+            return false;
+        }
+    }
+
     public int updateOccupancy(Long hallId, int newOccupancy) {
         String sql = "UPDATE halls SET current_occupancy = ?, updated_at = ? WHERE id = ?";
         return jdbcTemplate.update(sql, newOccupancy, LocalDateTime.now(), hallId);
@@ -178,6 +208,28 @@ public class HallRepository {
         Integer count = jdbcTemplate.queryForObject(sql, Integer.class, hallCode);
         return count != null && count > 0;
     }
+
+    
+
+    public Optional<Hall> findByHallName(String hallName) {
+    String sql = "SELECT * FROM halls WHERE LOWER(hall_name) = LOWER(?) AND is_active = true";
+    try {
+        Hall hall = jdbcTemplate.queryForObject(sql, new HallRowMapper(), hallName);
+        return Optional.ofNullable(hall);
+    } catch (Exception e) {
+        return Optional.empty();
+    }
+}
+
+public Optional<Hall> findByFullName(String fullName) {
+    String sql = "SELECT * FROM halls WHERE LOWER(full_name) = LOWER(?) AND is_active = true";
+    try {
+        Hall hall = jdbcTemplate.queryForObject(sql, new HallRowMapper(), fullName);
+        return Optional.ofNullable(hall);
+    } catch (Exception e) {
+        return Optional.empty();
+    }
+}
 
     public boolean existsByHallName(String hallName) {
         String sql = "SELECT COUNT(*) FROM halls WHERE hall_name = ? AND is_active = true";

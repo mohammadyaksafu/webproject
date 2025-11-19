@@ -48,8 +48,12 @@ const LoginForm = () => {
       }
 
       const users = await response.json();
-      const user = users.find((u) => u.email === formData.email);
-
+      
+    //  Find user by email AND check password
+      const user = users.find((u) => 
+        u.email === formData.email && u.password === formData.password
+      );
+     // const user = users.find((u) => u.email === formData.email );
       if (!user) {
         setError("Invalid email or password.");
         return;
@@ -69,18 +73,35 @@ const LoginForm = () => {
       // Store user info in localStorage
       localStorage.setItem("user", JSON.stringify(user));
       localStorage.setItem("isAuthenticated", "true");
-      localStorage.setItem("userId", user.id); // Store user ID separately
-      localStorage.setItem("userRole", user.role); // Store role separately
-      localStorage.setItem("userHall", user.hallName); // Store hall name separately
+      localStorage.setItem("userId", user.id);
+      localStorage.setItem("userRole", user.role);
+      localStorage.setItem("userHall", user.hallName);
 
-      console.log("User data stored in localStorage:", {
+      console.log("User logged in:", {
         id: user.id,
         email: user.email,
         role: user.role,
         hallName: user.hallName
       });
 
-      navigate(user.role === "ADMIN" ? "/admin" : "/dashboard");
+      // Route based on user role
+      switch (user.role) {
+        case "ADMIN":
+          navigate("/admin");
+          break;
+        case "CANTEEN_MANAGER":
+          navigate("/canteen-dashboard");
+          break;
+        case "STAFF":
+        case "TEACHER":
+          navigate("/dashboard");
+          break;
+        case "STUDENT":
+        default:
+          navigate("/dashboard");
+          break;
+      }
+
     } catch (err) {
       console.error(err);
       setError("Network error. Check if server is running.");

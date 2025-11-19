@@ -1,7 +1,6 @@
 import React, { useState } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 import PublicNav from "./PublicNav";
-import AuthenticatedNav from "./AuthenticatedNav";
 import MobileMenu from "./MobileMenu";
 
 const Navbar = () => {
@@ -28,6 +27,127 @@ const Navbar = () => {
     return location.pathname === path;
   };
 
+  // Role-based navigation configuration
+  const getRoleBasedNav = (user) => {
+    const baseNav = [
+      { path: "/dashboard", label: "Dashboard" }
+    ];
+
+    if (!user || !user.role) return baseNav;
+
+    switch (user.role) {
+      case 'STUDENT':
+        return [
+          ...baseNav,
+          { path: "/complaints", label: "My Complaints" },
+          { path: "/submit-complaint", label: "Submit Complaint" },
+          { path: "/meal", label: "Meal Menu" },
+          { path: "/profile", label: "Profile" }
+        ];
+      
+      case 'STAFF':
+        return [
+          ...baseNav,
+          { path: "/profile", label: "Profile" }
+        ];
+      
+      case 'ADMIN':
+        return [
+          ...baseNav,
+          { path: "/complaints", label: "All Complaints" },
+          { path: "/profile", label: "Profile" }
+        ];
+      
+      case 'CANTEEN_MANAGER':
+        return [
+          ...baseNav,
+          { path: "/meal", label: "Menu Management" },
+          { path: "/canteen-reports", label: "Reports" },
+          { path: "/profile", label: "Profile" }
+        ];
+      
+      case 'TEACHER':
+        return [
+          ...baseNav,
+          { path: "/student-info", label: "Student Info" },
+          { path: "/hall-notices", label: "Notices" },
+          { path: "/meal-plans", label: "Meal Plans" },
+          { path: "/complaints", label: "Complaints" },
+          { path: "/profile", label: "Profile" }
+        ];
+      
+      default:
+        return baseNav;
+    }
+  };
+
+  const AuthenticatedNav = ({ user, isActiveRoute, handleLogout }) => {
+    const navItems = getRoleBasedNav(user);
+
+    return (
+      <>
+        {navItems.map((item) => (
+          <a
+            key={item.path}
+            href={item.path}
+            className={`px-3 py-2 rounded-lg transition-colors duration-200 ${
+              isActiveRoute(item.path)
+                ? "bg-[#00df9a] text-black font-semibold"
+                : "text-gray-300 hover:text-white hover:bg-gray-800"
+            }`}
+            onClick={closeAllMenus}
+          >
+            {item.label}
+          </a>
+        ))}
+        
+        {/* User dropdown */}
+        <div className="relative group">
+          <button className="flex items-center gap-2 px-3 py-2 text-gray-300 hover:text-white hover:bg-gray-800 rounded-lg transition-colors duration-200">
+            <span className="w-8 h-8 bg-[#00df9a] rounded-full flex items-center justify-center text-black font-semibold text-sm">
+              {user?.name?.charAt(0) || 'U'}
+            </span>
+            <span>{user?.name || 'User'}</span>
+            <span className="text-xs">▼</span>
+          </button>
+          
+          {/* Dropdown menu */}
+          <div className="absolute right-0 top-full mt-2 w-48 bg-gray-800 border border-gray-700 rounded-lg shadow-lg opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200">
+            <div className="p-2">
+              <div className="px-3 py-2 text-sm text-gray-300 border-b border-gray-700">
+                <p className="font-semibold">{user?.name || 'User'}</p>
+                <p className="text-xs text-[#00df9a]">{user?.role || 'Unknown'}</p>
+              </div>
+              
+              <a
+                href="/profile"
+                className="block px-3 py-2 text-sm text-gray-300 hover:bg-gray-700 rounded-md transition-colors duration-200"
+                onClick={closeAllMenus}
+              >
+                Profile
+              </a>
+              
+              <a
+                href="/settings"
+                className="block px-3 py-2 text-sm text-gray-300 hover:bg-gray-700 rounded-md transition-colors duration-200"
+                onClick={closeAllMenus}
+              >
+                Settings
+              </a>
+              
+              <button
+                onClick={handleLogout}
+                className="w-full text-left px-3 py-2 text-sm text-red-400 hover:bg-gray-700 rounded-md transition-colors duration-200"
+              >
+                Logout
+              </button>
+            </div>
+          </div>
+        </div>
+      </>
+    );
+  };
+
   return (
     <header className="bg-black text-white shadow-lg sticky top-0 z-50">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 py-3 flex items-center justify-between">
@@ -41,7 +161,7 @@ const Navbar = () => {
         </a>
 
         {/* Desktop Navigation */}
-        <nav className="hidden lg:flex items-center gap-6">
+        <nav className="hidden lg:flex items-center gap-4">
           {isAuthenticated && user ? (
             <AuthenticatedNav 
               user={user} 
@@ -71,6 +191,7 @@ const Navbar = () => {
           isActiveRoute={isActiveRoute}
           handleLogout={handleLogout}
           closeAllMenus={closeAllMenus}
+          navItems={isAuthenticated && user ? getRoleBasedNav(user) : []}
         />
       )}
     </header>

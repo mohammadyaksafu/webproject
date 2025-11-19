@@ -158,8 +158,16 @@ public class HallService {
     public List<Object[]> getHallStatistics() {
         return hallRepository.getHallStatistics();
     }
-
+  
     public Hall addHall(Hall hall) {
         return hallRepository.save(hall);
     }
+
+    public Optional<Hall> getHallByName(String hallName) {
+    return hallRepository.findByHallName(hallName);
+}
+
+public Optional<Hall> getHallByFullName(String fullName) {
+    return hallRepository.findByFullName(fullName);
+}
 }

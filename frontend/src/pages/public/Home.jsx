@@ -1,58 +1,89 @@
 import React, { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
-import { ArrowRight, ArrowLeft } from "lucide-react";
+import { ArrowRight, ArrowLeft, Loader2, Eye } from "lucide-react";
 import Feature from "../../components/Feature";
 
 const Home = () => {
   const [currentSlide, setCurrentSlide] = useState(0);
+  const [halls, setHalls] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
 
-  const hallCarousel = [
-    {
-      name: "Shah Paran Hall (SHPH)",
-      image: "https://images.unsplash.com/photo-1562774053-701939374585?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80",
-      description: "One of the premier residential halls with modern facilities."
-    },
-    {
-      name: "Bijoy 24 Hall (B24H)",
-      image: "https://images.unsplash.com/photo-1586023492125-27b2c045efd7?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80",
-      description: "Comfortable accommodation with excellent amenities."
-    },
-    {
-      name: "Syed Mujtaba Ali Hall (SMAH)",
-      image: "https://images.unsplash.com/photo-1555854877-bab0e564b8d5?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80",
-      description: "Female students hall with secure and peaceful environment."
-    },
-    {
-      name: "Ayesha Siddiqa Hall (ASH)",
-      image: "https://images.unsplash.com/photo-1513584684374-8bab748fbf90?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80",
-      description: "Modern facilities with spacious rooms and common areas."
-    },
-    {
-      name: "Begum Sirajunnesa Chowdhury Hall (BSCH)",
-      image: "https://images.unsplash.com/photo-1571624436279-b272aff752b5?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80",
-      description: "Comfortable residential facility with dedicated study areas."
-    },
-    {
-      name: "Fatimah Tuz Zahra Hall (FTZH)",
-      image: "https://images.unsplash.com/photo-1545324418-cc1a3fa10c00?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80",
-      description: "Beautiful residential hall with green surroundings and peaceful atmosphere."
-    }
-  ];
-
+  // Fetch halls data from backend
   useEffect(() => {
-    const timer = setInterval(() => {
-      setCurrentSlide((prev) => (prev + 1) % hallCarousel.length);
-    }, 5000);
-    return () => clearInterval(timer);
+    const fetchHallsData = async () => {
+      try {
+        setLoading(true);
+        const response = await fetch('http://localhost:8080/api/halls');
+        
+        if (!response.ok) {
+          throw new Error('Failed to fetch halls data');
+        }
+        
+        const hallsData = await response.json();
+        setHalls(hallsData);
+        setError(null);
+      } catch (err) {
+        console.error('Error fetching halls data:', err);
+        setError(err.message);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchHallsData();
   }, []);
 
+  // Auto-slide carousel
+  useEffect(() => {
+    if (halls.length === 0) return;
+    
+    const timer = setInterval(() => {
+      setCurrentSlide((prev) => (prev + 1) % halls.length);
+    }, 5000);
+    return () => clearInterval(timer);
+  }, [halls.length]);
+
   const nextSlide = () => {
-    setCurrentSlide((prev) => (prev + 1) % hallCarousel.length);
+    if (halls.length === 0) return;
+    setCurrentSlide((prev) => (prev + 1) % halls.length);
   };
 
   const prevSlide = () => {
-    setCurrentSlide((prev) => (prev - 1 + hallCarousel.length) % hallCarousel.length);
+    if (halls.length === 0) return;
+    setCurrentSlide((prev) => (prev - 1 + halls.length) % halls.length);
   };
+
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100 flex items-center justify-center">
+        <div className="text-center">
+          <Loader2 className="h-12 w-12 animate-spin text-[#00df9a] mx-auto mb-4" />
+          <p className="text-gray-600 text-lg">Loading hall information...</p>
+        </div>
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100 flex items-center justify-center">
+        <div className="text-center">
+          <div className="bg-red-100 rounded-full p-4 w-16 h-16 mx-auto mb-4 flex items-center justify-center">
+            <Eye className="h-8 w-8 text-red-600" />
+          </div>
+          <h2 className="text-2xl font-bold text-gray-900 mb-2">Unable to Load Data</h2>
+          <p className="text-gray-600 mb-4">{error}</p>
+          <button 
+            onClick={() => window.location.reload()}
+            className="bg-[#00df9a] text-white px-6 py-2 rounded-lg font-semibold hover:bg-green-600 transition-colors"
+          >
+            Retry
+          </button>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100">
@@ -102,18 +133,22 @@ const Home = () => {
                 className="flex transition-transform duration-500 ease-in-out"
                 style={{ transform: `translateX(-${currentSlide * 100}%)` }}
               >
-                {hallCarousel.map((hall, index) => (
-                  <div key={index} className="w-full flex-shrink-0">
+                {halls.map((hall, index) => (
+                  <div key={hall.id || index} className="w-full flex-shrink-0">
                     <div className="relative h-96 md:h-[500px]">
                       <img
-                        src={hall.image}
-                        alt={hall.name}
+                        src={hall.imageUrl || "https://images.unsplash.com/photo-1562774053-701939374585?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80"}
+                        alt={hall.hallName}
                         className="w-full h-full object-cover"
                       />
                       <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent">
                         <div className="absolute bottom-0 left-0 right-0 p-8 text-white">
-                          <h3 className="text-2xl md:text-3xl font-bold mb-2">{hall.name}</h3>
-                          <p className="text-lg text-gray-200">{hall.description}</p>
+                          <h3 className="text-2xl md:text-3xl font-bold mb-2">
+                            {hall.hallName} ({hall.hallCode})
+                          </h3>
+                          <p className="text-lg text-gray-200">
+                            {hall.description || "Comfortable residential facility with modern amenities."}
+                          </p>
                         </div>
                       </div>
                     </div>
@@ -123,31 +158,35 @@ const Home = () => {
             </div>
 
             {/* Carousel Controls */}
-            <button
-              onClick={prevSlide}
-              className="absolute left-4 top-1/2 transform -translate-y-1/2 bg-black/50 hover:bg-black/70 text-white p-3 rounded-full transition-all duration-300"
-            >
-              <ArrowLeft className="h-6 w-6" />
-            </button>
-            <button
-              onClick={nextSlide}
-              className="absolute right-4 top-1/2 transform -translate-y-1/2 bg-black/50 hover:bg-black/70 text-white p-3 rounded-full transition-all duration-300"
-            >
-              <ArrowRight className="h-6 w-6" />
-            </button>
-
-            {/* Indicators */}
-            <div className="flex justify-center mt-6 space-x-2">
-              {hallCarousel.map((_, index) => (
+            {halls.length > 0 && (
+              <>
                 <button
-                  key={index}
-                  onClick={() => setCurrentSlide(index)}
-                  className={`w-3 h-3 rounded-full transition-all duration-300 ${
-                    index === currentSlide ? 'bg-[#00df9a]' : 'bg-gray-300'
-                  }`}
-                />
-              ))}
-            </div>
+                  onClick={prevSlide}
+                  className="absolute left-4 top-1/2 transform -translate-y-1/2 bg-black/50 hover:bg-black/70 text-white p-3 rounded-full transition-all duration-300"
+                >
+                  <ArrowLeft className="h-6 w-6" />
+                </button>
+                <button
+                  onClick={nextSlide}
+                  className="absolute right-4 top-1/2 transform -translate-y-1/2 bg-black/50 hover:bg-black/70 text-white p-3 rounded-full transition-all duration-300"
+                >
+                  <ArrowRight className="h-6 w-6" />
+                </button>
+
+                {/* Indicators */}
+                <div className="flex justify-center mt-6 space-x-2">
+                  {halls.map((_, index) => (
+                    <button
+                      key={index}
+                      onClick={() => setCurrentSlide(index)}
+                      className={`w-3 h-3 rounded-full transition-all duration-300 ${
+                        index === currentSlide ? 'bg-[#00df9a]' : 'bg-gray-300'
+                      }`}
+                    />
+                  ))}
+                </div>
+              </>
+            )}
           </div>
         </div>
       </section>
