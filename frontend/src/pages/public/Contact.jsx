@@ -1,71 +1,75 @@
-import React, { useState } from "react";
-import { Phone, Mail, MapPin, User, Building2, Clock, Send } from "lucide-react";
+import React, { useState, useEffect } from "react";
+import { Phone, Mail, MapPin, User, Building2, Clock, Send, Loader2, Eye } from "lucide-react";
 
 export default function Contact() {
   const [selectedHall, setSelectedHall] = useState(0);
-
-const halls = [
-    {
-      name: "Shah Paran Hall (SHPH)",
-      provost: "Dr. Mohammad Ali",
-      email: "shph-provost@sust.edu",
-      phone: "+8801712226601",
-      office: "Ground Floor, SHPH Building",
-      officeHours: "10:00 AM - 4:00 PM (Sat-Thu)",
-      image: "https://images.unsplash.com/photo-1562774053-701939374585?ixlib=rb-4.0.3&auto=format&fit=crop&w=500&q=80"
-    },
-    {
-      name: "Bijoy 24 Hall (B24H)",
-      provost: "Dr. Rahman Khan",
-      email: "b24h-provost@sust.edu",
-      phone: "+8801712226602",
-      office: "1st Floor, B24H Building",
-      officeHours: "10:00 AM - 4:00 PM (Sat-Thu)",
-      image: "https://images.unsplash.com/photo-1586023492125-27b2c045efd7?ixlib=rb-4.0.3&auto=format&fit=crop&w=500&q=80"
-    },
-    {
-      name: "Syed Mujtaba Ali Hall (SMAH)",
-      provost: "Dr. Fatima Begum",
-      email: "smah-provost@sust.edu",
-      phone: "+8801712226603",
-      office: "Ground Floor, SMAH Building",
-      officeHours: "10:00 AM - 4:00 PM (Sat-Thu)",
-      image: "https://images.unsplash.com/photo-1555854877-bab0e564b8d5?ixlib=rb-4.0.3&auto=format&fit=crop&w=500&q=80"
-    },
-    {
-      name: "Ayesha Siddiqa Hall (ASH)",
-      provost: "Dr. Ahmed Hussain",
-      email: "ash-provost@sust.edu",
-      phone: "+8801712226604",
-      office: "2nd Floor, ASH Building",
-      officeHours: "10:00 AM - 4:00 PM (Sat-Thu)",
-      image: "https://images.unsplash.com/photo-1513584684374-8bab748fbf90?ixlib=rb-4.0.3&auto=format&fit=crop&w=500&q=80"
-    },
-    {
-      name: "Begum Sirajunnesa Chowdhury Hall (BSCH)",
-      provost: "Dr. Nusrat Jahan",
-      email: "bsch-provost@sust.edu",
-      phone: "+8801712226605",
-      office: "Ground Floor, BSCH Building",
-      officeHours: "10:00 AM - 4:00 PM (Sat-Thu)",
-      image: "https://images.unsplash.com/photo-1571624436279-b272aff752b5?ixlib=rb-4.0.3&auto=format&fit=crop&w=500&q=80"
-    },
-    {
-      name: "Fatimah Tuz Zahra Hall (FTZH)",
-      provost: "Dr. Sabrina Chowdhury",
-      email: "ftzh-provost@sust.edu",
-      phone: "+8801712226606",
-      office: "1st Floor, FTZH Building",
-      officeHours: "10:00 AM - 4:00 PM (Sat-Thu)",
-      image: "https://images.unsplash.com/photo-1545324418-cc1a3fa10c00?ixlib=rb-4.0.3&auto=format&fit=crop&w=500&q=80"
-    }
-  ];
+  const [halls, setHalls] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
 
   const emergencyContacts = [
     { name: "Campus Security", phone: "+8801712229999" },
     { name: "Medical Emergency", phone: "+8801712228888" },
     { name: "IT Support", phone: "+8801712227777" }
   ];
+
+  // Fetch halls data from backend
+  useEffect(() => {
+    const fetchHallsData = async () => {
+      try {
+        setLoading(true);
+        const response = await fetch('http://localhost:8080/api/halls');
+        
+        if (!response.ok) {
+          throw new Error('Failed to fetch halls data');
+        }
+        
+        const hallsData = await response.json();
+        setHalls(hallsData);
+        setError(null);
+      } catch (err) {
+        console.error('Error fetching halls data:', err);
+        setError(err.message);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchHallsData();
+  }, []);
+
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100 flex items-center justify-center">
+        <div className="text-center">
+          <Loader2 className="h-12 w-12 animate-spin text-[#00df9a] mx-auto mb-4" />
+          <p className="text-gray-600 text-lg">Loading hall information...</p>
+        </div>
+      </div>
+    );
+  }
+
+  if (error || halls.length === 0) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100 flex items-center justify-center">
+        <div className="text-center">
+          <div className="bg-red-100 rounded-full p-4 w-16 h-16 mx-auto mb-4 flex items-center justify-center">
+            <Eye className="h-8 w-8 text-red-600" />
+          </div>
+          <h2 className="text-2xl font-bold text-gray-900 mb-2">Unable to Load Data</h2>
+          <p className="text-gray-600 mb-4">{error || "No halls found"}</p>
+          <button 
+            onClick={() => window.location.reload()}
+            className="bg-[#00df9a] text-white px-6 py-2 rounded-lg font-semibold hover:bg-green-600 transition-colors"
+          >
+            Retry
+          </button>
+        </div>
+      </div>
+    );
+  }
+
+  const selectedHallData = halls[selectedHall];
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100 py-12">
@@ -96,7 +100,7 @@ const halls = [
               <div className="space-y-3">
                 {halls.map((hall, index) => (
                   <button
-                    key={index}
+                    key={hall.id || index}
                     onClick={() => setSelectedHall(index)}
                     className={`w-full text-left p-4 rounded-xl transition-all duration-300 ${
                       selectedHall === index
@@ -104,11 +108,11 @@ const halls = [
                         : 'bg-gray-50 hover:bg-gray-100 text-gray-700 hover:shadow-md'
                     }`}
                   >
-                    <div className="font-semibold text-sm">{hall.name}</div>
+                    <div className="font-semibold text-sm">{hall.hallName} ({hall.hallCode})</div>
                     <div className={`text-xs mt-1 ${
                       selectedHall === index ? 'text-white/90' : 'text-gray-500'
                     }`}>
-                      {hall.provost}
+                      {hall.provost || "TBA"}
                     </div>
                   </button>
                 ))}
@@ -138,13 +142,13 @@ const halls = [
               {/* Hall Header with Image */}
               <div className="relative h-48 bg-gradient-to-r from-gray-900 to-black">
                 <img
-                  src={halls[selectedHall].image}
-                  alt={halls[selectedHall].name}
+                  src={selectedHallData.imageUrl || "https://images.unsplash.com/photo-1562774053-701939374585?ixlib=rb-4.0.3&auto=format&fit=crop&w=500&q=80"}
+                  alt={selectedHallData.hallName}
                   className="w-full h-full object-cover opacity-60"
                 />
                 <div className="absolute inset-0 flex items-center justify-center">
                   <h2 className="text-3xl font-bold text-white text-center px-4">
-                    {halls[selectedHall].name}
+                    {selectedHallData.hallName} ({selectedHallData.hallCode})
                   </h2>
                 </div>
               </div>
@@ -161,7 +165,7 @@ const halls = [
                       <h3 className="text-xl font-bold text-gray-900 ml-3">Hall Provost</h3>
                     </div>
                     <p className="text-lg font-semibold text-gray-800 mb-2">
-                      {halls[selectedHall].provost}
+                      {selectedHallData.provost || "TBA"}
                     </p>
                     <p className="text-gray-600">Responsible for overall hall management</p>
                   </div>
@@ -175,7 +179,7 @@ const halls = [
                       <h3 className="text-xl font-bold text-gray-900 ml-3">Office Hours</h3>
                     </div>
                     <p className="text-lg font-semibold text-gray-800 mb-2">
-                      {halls[selectedHall].officeHours}
+                      10:00 AM - 4:00 PM (Sat-Thu)
                     </p>
                     <p className="text-gray-600">Visit during office hours for in-person queries</p>
                   </div>
@@ -191,10 +195,10 @@ const halls = [
                     <div className="ml-4">
                       <h4 className="font-semibold text-gray-700">Phone Number</h4>
                       <a 
-                        href={`tel:${halls[selectedHall].phone}`}
+                        href={`tel:${selectedHallData.phone}`}
                         className="text-lg font-bold text-gray-900 hover:text-[#00df9a] transition-colors duration-200"
                       >
-                        {halls[selectedHall].phone}
+                        {selectedHallData.phone || "Not available"}
                       </a>
                     </div>
                   </div>
@@ -207,10 +211,10 @@ const halls = [
                     <div className="ml-4">
                       <h4 className="font-semibold text-gray-700">Email Address</h4>
                       <a 
-                        href={`mailto:${halls[selectedHall].email}`}
+                        href={`mailto:${selectedHallData.email}`}
                         className="text-lg font-bold text-gray-900 hover:text-[#00df9a] transition-colors duration-200 break-all"
                       >
-                        {halls[selectedHall].email}
+                        {selectedHallData.email || "Not available"}
                       </a>
                     </div>
                   </div>
@@ -223,7 +227,7 @@ const halls = [
                     <div className="ml-4">
                       <h4 className="font-semibold text-gray-700">Office Location</h4>
                       <p className="text-lg font-bold text-gray-900">
-                        {halls[selectedHall].office}
+                        {selectedHallData.officeLocation || "Hall Administration Office"}
                       </p>
                     </div>
                   </div>
@@ -231,20 +235,24 @@ const halls = [
 
                 {/* Quick Action Buttons */}
                 <div className="mt-8 flex flex-col sm:flex-row gap-4">
-                  <a
-                    href={`tel:${halls[selectedHall].phone}`}
-                    className="flex-1 bg-gradient-to-r from-[#00df9a] to-green-500 text-white py-4 px-6 rounded-xl font-bold text-center hover:shadow-lg transition-all duration-300 transform hover:scale-105 flex items-center justify-center"
-                  >
-                    <Phone className="h-5 w-5 mr-2" />
-                    Call Now
-                  </a>
-                  <a
-                    href={`mailto:${halls[selectedHall].email}`}
-                    className="flex-1 border-2 border-[#00df9a] text-[#00df9a] py-4 px-6 rounded-xl font-bold text-center hover:bg-[#00df9a] hover:text-white transition-all duration-300 transform hover:scale-105 flex items-center justify-center"
-                  >
-                    <Send className="h-5 w-5 mr-2" />
-                    Send Email
-                  </a>
+                  {selectedHallData.phone && (
+                    <a
+                      href={`tel:${selectedHallData.phone}`}
+                      className="flex-1 bg-gradient-to-r from-[#00df9a] to-green-500 text-white py-4 px-6 rounded-xl font-bold text-center hover:shadow-lg transition-all duration-300 transform hover:scale-105 flex items-center justify-center"
+                    >
+                      <Phone className="h-5 w-5 mr-2" />
+                      Call Now
+                    </a>
+                  )}
+                  {selectedHallData.email && (
+                    <a
+                      href={`mailto:${selectedHallData.email}`}
+                      className="flex-1 border-2 border-[#00df9a] text-[#00df9a] py-4 px-6 rounded-xl font-bold text-center hover:bg-[#00df9a] hover:text-white transition-all duration-300 transform hover:scale-105 flex items-center justify-center"
+                    >
+                      <Send className="h-5 w-5 mr-2" />
+                      Send Email
+                    </a>
+                  )}
                 </div>
               </div>
             </div>

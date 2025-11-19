@@ -6,11 +6,13 @@ import PendingUsersTab from "./components/PendingUsersTab";
 import AllUsersTab from "./components/AllUsersTab";
 import CreateUserTab from "./components/CreateUserTab";
 import HallManagementTab from "./components/HallManagementTab";
+import ComplaintManagementTab from "./components/ComplaintManagementTab"; // Add this import
 
 const AdminDashboard = () => {
   const [pendingUsers, setPendingUsers] = useState([]);
   const [allUsers, setAllUsers] = useState([]);
   const [halls, setHalls] = useState([]);
+  const [complaints, setComplaints] = useState([]); // Add complaints state
   const [loading, setLoading] = useState(true);
   const [activeTab, setActiveTab] = useState("pending");
   const navigate = useNavigate();
@@ -42,10 +44,11 @@ const AdminDashboard = () => {
   const fetchAllData = async () => {
     try {
       setLoading(true);
-      const [pendingResponse, allResponse, hallsResponse] = await Promise.all([
+      const [pendingResponse, allResponse, hallsResponse, complaintsResponse] = await Promise.all([
         fetch('http://localhost:8080/api/admin/pending-users'),
         fetch('http://localhost:8080/api/admin/users'),
-        fetch('http://localhost:8080/api/halls')
+        fetch('http://localhost:8080/api/halls'),
+        fetch('http://localhost:8080/api/complaints') // Fetch complaints
       ]);
 
       if (pendingResponse.ok) {
@@ -61,6 +64,11 @@ const AdminDashboard = () => {
       if (hallsResponse.ok) {
         const hallsData = await hallsResponse.json();
         setHalls(hallsData);
+      }
+
+      if (complaintsResponse.ok) {
+        const complaintsData = await complaintsResponse.json();
+        setComplaints(complaintsData);
       }
     } catch (error) {
       console.error('Error fetching data:', error);
@@ -236,6 +244,68 @@ const AdminDashboard = () => {
     }
   };
 
+  // Complaint Management Functions
+  const handleUpdateComplaintStatus = async (complaintId, updateData) => {
+    try {
+      const response = await fetch(`http://localhost:8080/api/complaints/${complaintId}/status`, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(updateData)
+      });
+
+      if (response.ok) {
+        fetchAllData();
+        return true;
+      }
+      return false;
+    } catch (error) {
+      console.error('Error updating complaint status:', error);
+      return false;
+    }
+  };
+
+  const handleAddComplaintNote = async (complaintId, noteData) => {
+    try {
+      const response = await fetch(`http://localhost:8080/api/complaints/${complaintId}/notes`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(noteData)
+      });
+
+      if (response.ok) {
+        fetchAllData();
+        return true;
+      }
+      return false;
+    } catch (error) {
+      console.error('Error adding complaint note:', error);
+      return false;
+    }
+  };
+
+  const handleDeleteComplaint = async (complaintId) => {
+    if (window.confirm('Are you sure you want to delete this complaint?')) {
+      try {
+        const response = await fetch(`http://localhost:8080/api/complaints/${complaintId}`, {
+          method: 'DELETE'
+        });
+
+        if (response.ok) {
+          fetchAllData();
+          return true;
+        }
+        return false;
+      } catch (error) {
+        console.error('Error deleting complaint:', error);
+        return false;
+      }
+    }
+  };
+
   if (loading) {
     return (
       <div className="min-h-screen bg-gradient-to-br from-gray-900 to-black py-8 px-4">
@@ -248,7 +318,7 @@ const AdminDashboard = () => {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-gray-900 to-black py-8 px-4">
-      <div className="max-w-6xl mx-auto">
+      <div className="max-w-7xl mx-auto"> {/* Increased max-width for better layout */}
         <AdminHeader navigate={navigate} />
         
         <AdminTabs 
@@ -257,6 +327,7 @@ const AdminDashboard = () => {
           pendingCount={pendingUsers.length}
           allCount={allUsers.length}
           hallsCount={halls.length}
+          complaintsCount={complaints.length} // Add complaints count
         />
 
         {/* Pending Users Tab */}
@@ -292,6 +363,17 @@ const AdminDashboard = () => {
             onUpdateHall={handleUpdateHall}
             onDeleteHall={handleDeleteHall}
             onUpdateOccupancy={handleUpdateOccupancy}
+          />
+        )}
+
+        {/* Complaint Management Tab */}
+        {activeTab === "complaints" && (
+          <ComplaintManagementTab 
+            complaints={complaints}
+            onUpdateStatus={handleUpdateComplaintStatus}
+            onAddNote={handleAddComplaintNote}
+            onDeleteComplaint={handleDeleteComplaint}
+            onRefresh={fetchAllData}
           />
         )}
       </div>

@@ -1,602 +1,420 @@
-import React, { useState, useEffect } from "react";
+import React, { useEffect, useState } from "react";
+import axios from "axios";
 import { useNavigate } from "react-router-dom";
 
-const Complaint = () => {
+export default function Complaint() {
   const [complaints, setComplaints] = useState([]);
-  const [loading, setLoading] = useState(false);
-  const [formData, setFormData] = useState({
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState("");
+  const [editingId, setEditingId] = useState(null);
+  const [editForm, setEditForm] = useState({
     title: "",
-    category: "",
     description: "",
+    category: "",
     priority: "MEDIUM"
   });
-  const [activeTab, setActiveTab] = useState("submit");
-  const [searchTerm, setSearchTerm] = useState("");
-  const [filterStatus, setFilterStatus] = useState("ALL");
+  const [user, setUser] = useState(null);
   const navigate = useNavigate();
 
-  const categories = [
-    "Technical Issue",
-    "Billing Problem",
-    "Service Quality",
-    "Security Concern",
-    "Facility Issue",
-    "Room Allocation",
-    "Maintenance",
-    "Other"
-  ];
-
-  const statusOptions = [
-    { value: "ALL", label: "All Status" },
-    { value: "OPEN", label: "Open" },
-    { value: "IN_PROGRESS", label: "In Progress" },
-    { value: "RESOLVED", label: "Resolved" },
-    { value: "CLOSED", label: "Closed" },
-    { value: "REJECTED", label: "Rejected" }
-  ];
-
-  // Check authentication on component mount
   useEffect(() => {
-    checkAuthentication();
+    // Get user from localStorage
+    const userData = JSON.parse(localStorage.getItem("user"));
+    setUser(userData);
+    fetchComplaints();
   }, []);
 
-  const checkAuthentication = () => {
-    const isAuthenticated = localStorage.getItem("isAuthenticated");
-    const user = localStorage.getItem("user");
-    
-    if (!isAuthenticated || !user) {
-      alert("Please login to access complaints");
-      navigate("/login");
-      return;
-    }
-    
-    // If authenticated, fetch complaints
-    fetchComplaints();
-  };
-
-  // Fetch complaints from backend
   const fetchComplaints = async () => {
-    setLoading(true);
     try {
-      const user = JSON.parse(localStorage.getItem('user') || '{}');
-      const userId = localStorage.getItem('userId') || user.id;
-      
-      console.log("Fetching complaints for user:", { userId, user });
-
-      if (!userId) {
-        alert("User not found. Please login again.");
-        navigate("/login");
-        return;
-      }
-
-      const response = await fetch(`http://localhost:8080/api/complaints/my-complaints`, {
-        headers: {
-          'Content-Type': 'application/json'
-        }
-      });
-      
-      if (response.ok) {
-        const data = await response.json();
-        console.log("Complaints fetched:", data);
-        setComplaints(data);
-      } else if (response.status === 401) {
-        alert("Session expired. Please login again.");
-        navigate("/login");
+      if (user && user.id) {
+        // Fetch user-specific complaints
+        const res = await axios.get(`http://localhost:8080/api/complaints/user/${user.id}`);
+        setComplaints(res.data);
       } else {
-        console.error("Failed to fetch complaints:", response.status);
-        alert("Failed to fetch complaints");
+        // Fetch all complaints (for admin or if no user)
+        const res = await axios.get("http://localhost:8080/api/complaints");
+        setComplaints(res.data);
       }
-    } catch (error) {
-      console.error('Error fetching complaints:', error);
-      alert("Error connecting to server");
-    } finally {
+      setLoading(false);
+    } catch (err) {
+      setError("Failed to load complaints.");
       setLoading(false);
     }
   };
 
-  const handleSubmit = async (e) => {
-    e.preventDefault();
-    if (!formData.title || !formData.description || !formData.category) {
-      alert("Please fill in all required fields");
-      return;
-    }
-
-    try {
-      const user = JSON.parse(localStorage.getItem('user') || '{}');
-      const userId = localStorage.getItem('userId') || user.id;
-
-      if (!userId) {
-        alert("Please login to submit a complaint");
-        navigate("/login");
-        return;
-      }
-
-      const complaintData = {
-        title: formData.title,
-        description: formData.description,
-        category: formData.category,
-        priority: formData.priority
-      };
-
-      console.log("Submitting complaint:", complaintData);
-
-      const response = await fetch('http://localhost:8080/api/complaints', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(complaintData)
-      });
-
-      if (response.ok) {
-        const newComplaint = await response.json();
-        setComplaints([newComplaint, ...complaints]);
-        setFormData({
-          title: "",
-          category: "",
-          description: "",
-          priority: "MEDIUM"
-        });
-        alert("Complaint submitted successfully!");
-        setActiveTab("manage");
-      } else {
-        const errorText = await response.text();
-        console.error("Failed to submit complaint:", errorText);
-        alert("Failed to submit complaint: " + errorText);
-      }
-    } catch (error) {
-      console.error('Error submitting complaint:', error);
-      alert("Error submitting complaint");
-    }
+  const handleAddComplaint = () => {
+    navigate("/submit-complaint");
   };
 
-  const handleChange = (e) => {
-    setFormData({
-      ...formData,
-      [e.target.name]: e.target.value
+  const handleEditClick = (complaint) => {
+    setEditingId(complaint.id);
+    setEditForm({
+      title: complaint.title,
+      description: complaint.description,
+      category: complaint.category || "",
+      priority: complaint.priority || "MEDIUM"
     });
   };
 
-  const updateComplaintStatus = async (id, status) => {
-    try {
-      const response = await fetch(`http://localhost:8080/api/complaints/my-complaints/${id}`, {
-        method: 'PUT',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({ status })
-      });
+  const handleEditChange = (e) => {
+    const { name, value } = e.target;
+    setEditForm(prev => ({
+      ...prev,
+      [name]: value
+    }));
+  };
 
-      if (response.ok) {
-        // Refresh complaints list
-        fetchComplaints();
-        alert("Complaint status updated successfully!");
-      } else {
-        alert("Failed to update complaint status");
-      }
-    } catch (error) {
-      console.error('Error updating complaint status:', error);
-      alert("Error updating complaint status");
+  const handleUpdate = async (id) => {
+    try {
+      const response = await axios.put(`http://localhost:8080/api/complaints/${id}`, editForm);
+      
+      // Update the complaint in the local state
+      setComplaints(prev => prev.map(c => 
+        c.id === id ? response.data : c
+      ));
+      
+      setEditingId(null);
+      alert("Complaint updated successfully!");
+    } catch (err) {
+      console.error("Error updating complaint:", err);
+      alert("Failed to update complaint.");
     }
   };
 
-  const deleteComplaint = async (id) => {
-    if (!window.confirm('Are you sure you want to delete this complaint?')) {
+  const handleCancelEdit = () => {
+    setEditingId(null);
+    setEditForm({
+      title: "",
+      description: "",
+      category: "",
+      priority: "MEDIUM"
+    });
+  };
+
+  const handleDelete = async (id) => {
+    if (!window.confirm("Are you sure you want to delete this complaint?")) {
       return;
     }
 
     try {
-      const response = await fetch(`http://localhost:8080/api/complaints/my-complaints/${id}`, {
-        method: 'DELETE'
-      });
-
-      if (response.ok) {
-        setComplaints(complaints.filter(complaint => complaint.id !== id));
-        alert("Complaint deleted successfully!");
-      } else {
-        alert("Failed to delete complaint");
-      }
-    } catch (error) {
-      console.error('Error deleting complaint:', error);
-      alert("Error deleting complaint");
+      await axios.delete(`http://localhost:8080/api/complaints/${id}`);
+      
+      // Remove the complaint from the local state
+      setComplaints(prev => prev.filter(c => c.id !== id));
+      alert("Complaint deleted successfully!");
+    } catch (err) {
+      console.error("Error deleting complaint:", err);
+      alert("Failed to delete complaint.");
     }
+  };
+
+  const formatDate = (dateString) => {
+    if (!dateString) return "N/A";
+    return new Date(dateString).toLocaleString();
   };
 
   const getStatusColor = (status) => {
     switch (status) {
-      case "OPEN": return "bg-yellow-500";
-      case "IN_PROGRESS": return "bg-blue-500";
-      case "RESOLVED": return "bg-green-500";
-      case "CLOSED": return "bg-gray-500";
-      case "REJECTED": return "bg-red-500";
-      default: return "bg-gray-500";
+      case "OPEN": return "bg-yellow-500 text-white";
+      case "IN_PROGRESS": return "bg-blue-500 text-white";
+      case "RESOLVED": return "bg-green-500 text-white";
+      case "REJECTED": return "bg-red-500 text-white";
+      case "CLOSED": return "bg-gray-500 text-white";
+      default: return "bg-gray-500 text-white";
     }
   };
 
   const getPriorityColor = (priority) => {
     switch (priority) {
-      case "HIGH": return "text-red-400";
-      case "MEDIUM": return "text-yellow-400";
-      case "LOW": return "text-green-400";
-      case "URGENT": return "text-red-600";
-      default: return "text-gray-400";
+      case "HIGH": return "bg-red-500 text-white";
+      case "MEDIUM": return "bg-yellow-500 text-white";
+      case "LOW": return "bg-green-500 text-white";
+      case "URGENT": return "bg-red-700 text-white";
+      default: return "bg-gray-500 text-white";
     }
   };
 
-  const getPriorityBadgeColor = (priority) => {
-    switch (priority) {
-      case "HIGH": return "bg-red-500";
-      case "MEDIUM": return "bg-yellow-500";
-      case "LOW": return "bg-green-500";
-      case "URGENT": return "bg-red-700";
-      default: return "bg-gray-500";
-    }
-  };
-
-  const formatDate = (dateString) => {
-    const date = new Date(dateString);
-    return date.toLocaleDateString('en-US', { 
-      year: 'numeric', 
-      month: 'short', 
-      day: 'numeric',
-      hour: '2-digit',
-      minute: '2-digit'
-    });
-  };
-
-  const getStatusText = (status) => {
-    switch (status) {
-      case "OPEN": return "Open";
-      case "IN_PROGRESS": return "In Progress";
-      case "RESOLVED": return "Resolved";
-      case "CLOSED": return "Closed";
-      case "REJECTED": return "Rejected";
-      default: return status;
-    }
-  };
-
-  const getPriorityText = (priority) => {
-    switch (priority) {
-      case "HIGH": return "High";
-      case "MEDIUM": return "Medium";
-      case "LOW": return "Low";
-      case "URGENT": return "Urgent";
-      default: return priority;
-    }
-  };
-
-  // Filter complaints based on search and status
-  const filteredComplaints = complaints.filter(complaint => {
-    const matchesSearch = complaint.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                         complaint.description.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                         complaint.category.toLowerCase().includes(searchTerm.toLowerCase());
-    
-    const matchesStatus = filterStatus === "ALL" || complaint.status === filterStatus;
-    
-    return matchesSearch && matchesStatus;
-  });
-
-  // Display current user info
-  const displayUserInfo = () => {
-    const user = JSON.parse(localStorage.getItem('user') || '{}');
-    const userId = localStorage.getItem('userId');
-    
-    return (
-      <div className="bg-gray-800 rounded-lg p-4 mb-6 border border-gray-700">
-        <div className="flex justify-between items-center">
-          <div>
-            <h3 className="text-lg font-semibold text-[#00df9a] mb-2">Welcome, {user.name || 'User'}!</h3>
-            <div className="text-gray-300 text-sm space-y-1">
-              <p><strong>Email:</strong> {user.email || 'N/A'}</p>
-              <p><strong>Hall:</strong> {user.hallName || 'N/A'}</p>
-              <p><strong>Role:</strong> <span className="capitalize">{user.role?.toLowerCase() || 'N/A'}</span></p>
-            </div>
-          </div>
-          <button
-            onClick={() => {
-              localStorage.clear();
-              navigate("/login");
-            }}
-            className="px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors text-sm"
-          >
-            Logout
-          </button>
-        </div>
+  if (loading) return (
+    <div className="min-h-screen bg-black py-8">
+      <div className="max-w-6xl mx-auto px-4">
+        <p className="text-center py-5 text-gray-400">Loading complaints...</p>
       </div>
-    );
-  };
-
-  // Calculate statistics
-  const stats = {
-    total: complaints.length,
-    open: complaints.filter(c => c.status === 'OPEN').length,
-    inProgress: complaints.filter(c => c.status === 'IN_PROGRESS').length,
-    resolved: complaints.filter(c => c.status === 'RESOLVED').length,
-    closed: complaints.filter(c => c.status === 'CLOSED').length,
-    rejected: complaints.filter(c => c.status === 'REJECTED').length
-  };
-
-  if (loading && complaints.length === 0) {
-    return (
-      <div className="min-h-screen bg-gradient-to-br from-gray-900 to-black py-8 px-4 flex items-center justify-center">
-        <div className="text-white text-lg">Loading complaints...</div>
+    </div>
+  );
+  
+  if (error) return (
+    <div className="min-h-screen bg-black py-8">
+      <div className="max-w-6xl mx-auto px-4">
+        <p className="text-center text-red-400 bg-red-900 bg-opacity-20 p-4 rounded-lg border border-red-800">{error}</p>
       </div>
-    );
-  }
+    </div>
+  );
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-gray-900 to-black py-8 px-4">
-      <div className="max-w-6xl mx-auto">
-        {/* Header */}
-        <div className="text-center mb-8">
-          <h1 className="text-4xl font-bold text-[#00df9a] mb-2">Complaint Management System</h1>
-          <p className="text-gray-400">Submit and track your complaints efficiently</p>
-        </div>
-
-        {/* Display current user info */}
-        {displayUserInfo()}
-
-        {/* Navigation Tabs */}
-        <div className="flex space-x-4 mb-6 border-b border-gray-700">
-          <button
-            className={`py-3 px-6 font-semibold transition-all ${
-              activeTab === "submit" 
-                ? "text-[#00df9a] border-b-2 border-[#00df9a]" 
-                : "text-gray-400 hover:text-gray-300"
-            }`}
-            onClick={() => setActiveTab("submit")}
-          >
-            Submit Complaint
-          </button>
-          <button
-            className={`py-3 px-6 font-semibold transition-all ${
-              activeTab === "manage" 
-                ? "text-[#00df9a] border-b-2 border-[#00df9a]" 
-                : "text-gray-400 hover:text-gray-300"
-            }`}
-            onClick={() => setActiveTab("manage")}
-          >
-            Manage Complaints ({complaints.length})
-          </button>
-        </div>
-
-        {/* Submit Complaint Tab */}
-        {activeTab === "submit" && (
-          <div className="bg-gray-800 rounded-xl p-6 shadow-2xl border border-gray-700">
-            <h2 className="text-2xl font-bold text-white mb-6">Submit New Complaint</h2>
-            <form onSubmit={handleSubmit} className="space-y-6">
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                {/* Complaint Title */}
-                <div className="md:col-span-2">
-                  <label className="block text-gray-300 mb-2 font-medium">
-                    Complaint Title <span className="text-red-400">*</span>
-                  </label>
-                  <input
-                    type="text"
-                    name="title"
-                    value={formData.title}
-                    onChange={handleChange}
-                    className="w-full px-4 py-3 bg-gray-700 border border-gray-600 rounded-lg text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-[#00df9a] focus:border-transparent transition-all"
-                    placeholder="Brief description of your complaint"
-                    required
-                  />
-                </div>
-
-                {/* Category */}
-                <div>
-                  <label className="block text-gray-300 mb-2 font-medium">
-                    Category <span className="text-red-400">*</span>
-                  </label>
-                  <select
-                    name="category"
-                    value={formData.category}
-                    onChange={handleChange}
-                    className="w-full px-4 py-3 bg-gray-700 border border-gray-600 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-[#00df9a] focus:border-transparent transition-all"
-                    required
-                  >
-                    <option value="">Select a category</option>
-                    {categories.map((cat) => (
-                      <option key={cat} value={cat}>{cat}</option>
-                    ))}
-                  </select>
-                </div>
-
-                {/* Priority */}
-                <div>
-                  <label className="block text-gray-300 mb-2 font-medium">
-                    Priority
-                  </label>
-                  <select
-                    name="priority"
-                    value={formData.priority}
-                    onChange={handleChange}
-                    className="w-full px-4 py-3 bg-gray-700 border border-gray-600 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-[#00df9a] focus:border-transparent transition-all"
-                  >
-                    <option value="LOW">Low</option>
-                    <option value="MEDIUM">Medium</option>
-                    <option value="HIGH">High</option>
-                    <option value="URGENT">Urgent</option>
-                  </select>
-                </div>
-
-                {/* Description */}
-                <div className="md:col-span-2">
-                  <label className="block text-gray-300 mb-2 font-medium">
-                    Detailed Description <span className="text-red-400">*</span>
-                  </label>
-                  <textarea
-                    name="description"
-                    value={formData.description}
-                    onChange={handleChange}
-                    rows="5"
-                    className="w-full px-4 py-3 bg-gray-700 border border-gray-600 rounded-lg text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-[#00df9a] focus:border-transparent transition-all resize-vertical"
-                    placeholder="Please provide detailed information about your complaint..."
-                    required
-                  />
-                </div>
-              </div>
-
-              {/* Submit Button */}
-              <div className="flex justify-end pt-4">
-                <button
-                  type="submit"
-                  className="px-8 py-3 bg-[#00df9a] text-gray-900 font-bold rounded-lg hover:bg-[#00c785] transition-all transform hover:scale-105 focus:outline-none focus:ring-2 focus:ring-[#00df9a] focus:ring-opacity-50"
-                  disabled={loading}
-                >
-                  {loading ? "Submitting..." : "Submit Complaint"}
-                </button>
-              </div>
-            </form>
-          </div>
-        )}
-
-        {/* Manage Complaints Tab */}
-        {activeTab === "manage" && (
-          <div className="bg-gray-800 rounded-xl p-6 shadow-2xl border border-gray-700">
-            <div className="flex flex-col md:flex-row md:items-center justify-between mb-6">
-              <h2 className="text-2xl font-bold text-white mb-4 md:mb-0">Your Complaints</h2>
-              
-              {/* Search and Filter */}
-              <div className="flex flex-col sm:flex-row gap-4">
-                <div className="relative">
-                  <input
-                    type="text"
-                    placeholder="Search complaints..."
-                    value={searchTerm}
-                    onChange={(e) => setSearchTerm(e.target.value)}
-                    className="px-4 py-2 bg-gray-700 border border-gray-600 rounded-lg text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-[#00df9a] focus:border-transparent"
-                  />
-                </div>
-                <select
-                  value={filterStatus}
-                  onChange={(e) => setFilterStatus(e.target.value)}
-                  className="px-4 py-2 bg-gray-700 border border-gray-600 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-[#00df9a] focus:border-transparent"
-                >
-                  {statusOptions.map(option => (
-                    <option key={option.value} value={option.value}>
-                      {option.label}
-                    </option>
-                  ))}
-                </select>
-              </div>
+    <div className="min-h-screen bg-black py-8">
+      <div className="max-w-6xl mx-auto px-4 sm:px-6">
+        {/* Header Section */}
+        <div className="bg-gray-900 text-white rounded-xl shadow-lg p-6 mb-8 border border-gray-800">
+          <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+            <div>
+              <h1 className="text-2xl sm:text-3xl font-bold text-[#00df9a]">
+                {user?.role === "ADMIN" ? "All Complaints" : "My Complaints"}
+              </h1>
+              <p className="text-gray-400 mt-2">
+                {user?.role === "ADMIN" 
+                  ? "Manage and respond to all complaints" 
+                  : "Manage and track your complaints"
+                }
+              </p>
             </div>
-            
-            {filteredComplaints.length === 0 ? (
-              <div className="text-center py-12">
-                <div className="text-gray-400 text-lg mb-4">
-                  {complaints.length === 0 ? "No complaints submitted yet" : "No complaints match your search"}
-                </div>
-                {complaints.length === 0 && (
-                  <button
-                    onClick={() => setActiveTab("submit")}
-                    className="px-6 py-2 bg-[#00df9a] text-gray-900 font-semibold rounded-lg hover:bg-[#00c785] transition-all"
-                  >
-                    Submit Your First Complaint
-                  </button>
-                )}
-              </div>
-            ) : (
-              <div className="space-y-4">
-                {filteredComplaints.map((complaint) => (
-                  <div
-                    key={complaint.id}
-                    className="bg-gray-700 rounded-lg p-4 border border-gray-600 hover:border-gray-500 transition-all"
-                  >
-                    <div className="flex flex-col md:flex-row md:items-center justify-between mb-3">
-                      <div className="flex items-center space-x-3 mb-2 md:mb-0">
-                        <h3 className="text-lg font-semibold text-white">{complaint.title}</h3>
-                        <span className={`px-2 py-1 rounded-full text-xs font-medium ${getStatusColor(complaint.status)}`}>
-                          {getStatusText(complaint.status)}
-                        </span>
-                        <span className={`px-2 py-1 rounded-full text-xs font-medium ${getPriorityBadgeColor(complaint.priority)}`}>
-                          {getPriorityText(complaint.priority)}
-                        </span>
-                      </div>
-                      <div className="text-sm text-gray-300">
-                        <span>{formatDate(complaint.createdAt)}</span>
-                      </div>
-                    </div>
+            <div className="flex flex-col sm:flex-row gap-3">
+              {user?.role !== "ADMIN" && (
+                <button
+                  onClick={handleAddComplaint}
+                  className="bg-[#00df9a] text-black px-6 py-3 rounded-lg font-semibold hover:bg-[#00c389] transition-colors duration-200 shadow-md hover:shadow-lg flex items-center justify-center gap-2"
+                >
+                  <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
+                  </svg>
+                  Add Complaint
+                </button>
+              )}
+              <button
+                onClick={fetchComplaints}
+                className="bg-gray-800 text-white px-6 py-3 rounded-lg font-semibold hover:bg-gray-700 transition-colors duration-200 shadow-md hover:shadow-lg flex items-center justify-center gap-2 border border-gray-700"
+              >
+                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+                </svg>
+                Refresh
+              </button>
+              {user?.role === "ADMIN" && (
+                <button
+                  onClick={() => navigate("/admin-complaints")}
+                  className="bg-blue-600 text-white px-6 py-3 rounded-lg font-semibold hover:bg-blue-700 transition-colors duration-200 shadow-md hover:shadow-lg flex items-center justify-center gap-2"
+                >
+                  <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" />
+                  </svg>
+                  Admin View
+                </button>
+              )}
+            </div>
+          </div>
+        </div>
 
-                    <div className="flex flex-col md:flex-row md:items-start justify-between">
-                      <div className="mb-3 md:mb-0 flex-1">
-                        <span className="inline-block bg-gray-600 text-gray-300 px-3 py-1 rounded-full text-sm mr-3 mb-2">
-                          {complaint.category}
-                        </span>
-                        <p className="text-gray-300 mt-2">{complaint.description}</p>
-                        
-                        {complaint.adminResponse && (
-                          <div className="mt-3 p-3 bg-gray-600 rounded-lg">
-                            <p className="text-sm text-gray-300 font-semibold">Admin Response:</p>
-                            <p className="text-gray-300 mt-1">{complaint.adminResponse}</p>
-                            {complaint.updatedAt && (
-                              <p className="text-xs text-gray-400 mt-2">
-                                Updated: {formatDate(complaint.updatedAt)}
-                              </p>
-                            )}
-                          </div>
-                        )}
-                      </div>
-                      
-                      <div className="flex space-x-2 flex-shrink-0">
-                        <select
-                          value={complaint.status}
-                          onChange={(e) => updateComplaintStatus(complaint.id, e.target.value)}
-                          className="bg-gray-600 text-white text-sm rounded px-2 py-1 focus:outline-none focus:ring-1 focus:ring-[#00df9a]"
-                          disabled={complaint.status === "RESOLVED" || complaint.status === "CLOSED" || complaint.status === "REJECTED"}
-                        >
-                          <option value="OPEN">Open</option>
-                          <option value="IN_PROGRESS">In Progress</option>
-                          <option value="RESOLVED">Resolved</option>
-                          <option value="CLOSED">Closed</option>
-                        </select>
-                        <button
-                          onClick={() => deleteComplaint(complaint.id)}
-                          className="px-3 py-1 bg-red-600 text-white text-sm rounded hover:bg-red-700 transition-all"
-                          disabled={complaint.status === "IN_PROGRESS"}
-                        >
-                          Delete
-                        </button>
-                      </div>
-                    </div>
-                  </div>
-                ))}
-              </div>
+        {complaints.length === 0 ? (
+          <div className="text-center py-16 bg-gray-900 rounded-xl shadow-sm border border-gray-800">
+            <div className="text-6xl mb-4">📝</div>
+            <h3 className="text-xl font-semibold text-white mb-2">
+              {user?.role === "ADMIN" ? "No complaints found" : "No complaints yet"}
+            </h3>
+            <p className="text-gray-400 mb-6">
+              {user?.role === "ADMIN" 
+                ? "There are no complaints in the system." 
+                : "Submit your first complaint to get started with our support system."
+              }
+            </p>
+            {user?.role !== "ADMIN" && (
+              <button
+                onClick={handleAddComplaint}
+                className="bg-[#00df9a] text-black px-8 py-3 rounded-lg font-semibold hover:bg-[#00c389] transition-colors duration-200 shadow-md hover:shadow-lg inline-flex items-center gap-2"
+              >
+                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
+                </svg>
+                Submit Your First Complaint
+              </button>
             )}
           </div>
-        )}
+        ) : (
+          <div className="grid grid-cols-1 gap-6">
+            {complaints.map((complaint) => (
+              <div
+                key={complaint.id}
+                className="p-6 border border-gray-800 rounded-xl shadow-sm bg-gray-900 hover:shadow-lg transition-all duration-300"
+              >
+                {editingId === complaint.id ? (
+                  // Edit Form
+                  <div className="space-y-4">
+                    <input
+                      type="text"
+                      name="title"
+                      value={editForm.title}
+                      onChange={handleEditChange}
+                      className="w-full p-3 border border-gray-700 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#00df9a] focus:border-transparent transition-all duration-200 bg-gray-800 text-white placeholder-gray-400"
+                      placeholder="Enter complaint title"
+                    />
+                    <textarea
+                      name="description"
+                      value={editForm.description}
+                      onChange={handleEditChange}
+                      rows="4"
+                      className="w-full p-3 border border-gray-700 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#00df9a] focus:border-transparent transition-all duration-200 resize-vertical bg-gray-800 text-white placeholder-gray-400"
+                      placeholder="Enter detailed description"
+                    />
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                      <select
+                        name="category"
+                        value={editForm.category}
+                        onChange={handleEditChange}
+                        className="p-3 border border-gray-700 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#00df9a] focus:border-transparent transition-all duration-200 bg-gray-800 text-white"
+                      >
+                        <option value="">Select Category</option>
+                        <option value="Electrical">Electrical</option>
+                        <option value="Plumbing">Plumbing</option>
+                        <option value="Furniture">Furniture</option>
+                        <option value="Cleanliness">Cleanliness</option>
+                        <option value="Internet">Internet</option>
+                        <option value="Security">Security</option>
+                        <option value="Other">Other</option>
+                      </select>
+                      <select
+                        name="priority"
+                        value={editForm.priority}
+                        onChange={handleEditChange}
+                        className="p-3 border border-gray-700 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#00df9a] focus:border-transparent transition-all duration-200 bg-gray-800 text-white"
+                      >
+                        <option value="LOW">Low Priority</option>
+                        <option value="MEDIUM">Medium Priority</option>
+                        <option value="HIGH">High Priority</option>
+                        <option value="URGENT">Urgent Priority</option>
+                      </select>
+                    </div>
+                    <div className="flex gap-3 pt-2">
+                      <button
+                        onClick={() => handleUpdate(complaint.id)}
+                        className="bg-[#00df9a] text-black px-6 py-3 rounded-lg font-semibold hover:bg-[#00c389] transition-colors duration-200 shadow-md hover:shadow-lg flex-1"
+                      >
+                        Save Changes
+                      </button>
+                      <button
+                        onClick={handleCancelEdit}
+                        className="bg-gray-700 text-white px-6 py-3 rounded-lg font-semibold hover:bg-gray-600 transition-colors duration-200 shadow-md hover:shadow-lg flex-1"
+                      >
+                        Cancel
+                      </button>
+                    </div>
+                  </div>
+                ) : (
+                  // Display Mode
+                  <>
+                    <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-4">
+                      <h2 className="text-xl font-bold text-white">{complaint.title}</h2>
+                      {user?.role !== "ADMIN" && (
+                        <div className="flex gap-2">
+                          <button
+                            onClick={() => handleEditClick(complaint)}
+                            className="bg-blue-600 text-white px-4 py-2 rounded-lg text-sm font-semibold hover:bg-blue-700 transition-colors duration-200 shadow-sm hover:shadow-md flex items-center gap-1"
+                          >
+                            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
+                            </svg>
+                            Edit
+                          </button>
+                          <button
+                            onClick={() => handleDelete(complaint.id)}
+                            className="bg-red-600 text-white px-4 py-2 rounded-lg text-sm font-semibold hover:bg-red-700 transition-colors duration-200 shadow-sm hover:shadow-md flex items-center gap-1"
+                          >
+                            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                            </svg>
+                            Delete
+                          </button>
+                        </div>
+                      )}
+                    </div>
 
-        {/* Stats Summary */}
-        {complaints.length > 0 && (
-          <div className="mt-8 grid grid-cols-2 md:grid-cols-6 gap-4">
-            <div className="bg-gray-800 rounded-lg p-4 text-center border border-gray-700">
-              <div className="text-2xl font-bold text-[#00df9a]">{stats.total}</div>
-              <div className="text-gray-400 text-sm">Total</div>
-            </div>
-            <div className="bg-gray-800 rounded-lg p-4 text-center border border-gray-700">
-              <div className="text-2xl font-bold text-yellow-400">{stats.open}</div>
-              <div className="text-gray-400 text-sm">Open</div>
-            </div>
-            <div className="bg-gray-800 rounded-lg p-4 text-center border border-gray-700">
-              <div className="text-2xl font-bold text-blue-400">{stats.inProgress}</div>
-              <div className="text-gray-400 text-sm">In Progress</div>
-            </div>
-            <div className="bg-gray-800 rounded-lg p-4 text-center border border-gray-700">
-              <div className="text-2xl font-bold text-green-400">{stats.resolved}</div>
-              <div className="text-gray-400 text-sm">Resolved</div>
-            </div>
-            <div className="bg-gray-800 rounded-lg p-4 text-center border border-gray-700">
-              <div className="text-2xl font-bold text-gray-400">{stats.closed}</div>
-              <div className="text-gray-400 text-sm">Closed</div>
-            </div>
-            <div className="bg-gray-800 rounded-lg p-4 text-center border border-gray-700">
-              <div className="text-2xl font-bold text-red-400">{stats.rejected}</div>
-              <div className="text-gray-400 text-sm">Rejected</div>
-            </div>
+                    <p className="text-gray-300 mt-2 mb-4 whitespace-pre-wrap leading-relaxed bg-gray-800 p-4 rounded-lg border border-gray-700">
+                      {complaint.description}
+                    </p>
+
+                    <div className="mt-4 flex flex-wrap gap-3">
+                      <span className={`px-4 py-2 rounded-full text-sm font-semibold ${getStatusColor(complaint.status)}`}>
+                        {complaint.status.replace('_', ' ')}
+                      </span>
+                      <span className={`px-4 py-2 rounded-full text-sm font-semibold ${getPriorityColor(complaint.priority)}`}>
+                        {complaint.priority} Priority
+                      </span>
+                      {complaint.category && (
+                        <span className="bg-purple-600 text-white px-4 py-2 rounded-full text-sm font-semibold">
+                          {complaint.category}
+                        </span>
+                      )}
+                    </div>
+
+                    <div className="mt-6 grid grid-cols-1 md:grid-cols-2 gap-4 text-sm text-gray-400 bg-gray-800 p-4 rounded-lg border border-gray-700">
+                      <div className="space-y-2">
+                        <p><strong className="text-white">Submitted By:</strong> {complaint.userName || `User ID: ${complaint.userId}`}</p>
+                        <p><strong className="text-white">Category:</strong> {complaint.category}</p>
+                      </div>
+                      <div className="space-y-2">
+                        <p><strong className="text-white">Created:</strong> {formatDate(complaint.createdAt)}</p>
+                        <p><strong className="text-white">Updated:</strong> {formatDate(complaint.updatedAt)}</p>
+                        {complaint.resolvedAt && (
+                          <p><strong className="text-white">Resolved:</strong> {formatDate(complaint.resolvedAt)}</p>
+                        )}
+                      </div>
+                    </div>
+
+                    {/* Admin Response Section */}
+                    {complaint.adminResponse && (
+                      <div className="mt-4 p-4 bg-green-900 bg-opacity-20 border border-green-800 rounded-lg">
+                        <div className="flex justify-between items-start mb-2">
+                          <p className="text-green-400 font-semibold text-sm uppercase tracking-wide">Official Response:</p>
+                          {complaint.respondedBy && (
+                            <span className="text-green-300 text-xs">By Admin ID: {complaint.respondedBy}</span>
+                          )}
+                        </div>
+                        <p className="text-green-300 leading-relaxed">{complaint.adminResponse}</p>
+                      </div>
+                    )}
+
+                    {/* Activity History - Notes */}
+                    {complaint.notes && complaint.notes.length > 0 && (
+                      <div className="mt-4 p-4 bg-blue-900 bg-opacity-10 border border-blue-800 rounded-lg">
+                        <p className="text-blue-400 font-semibold text-sm uppercase tracking-wide mb-3">Activity History:</p>
+                        <div className="space-y-3">
+                          {complaint.notes.map((note, index) => (
+                            <div key={index} className="flex gap-3 text-sm">
+                              <div className="flex-shrink-0 w-2 bg-blue-500 rounded-full"></div>
+                              <div className="flex-1">
+                                <p className="text-blue-300">{note.note}</p>
+                                <p className="text-blue-400 text-xs mt-1">
+                                  {formatDate(note.createdAt)} 
+                                  {note.authorName && ` • By ${note.authorName}`}
+                                </p>
+                              </div>
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+                    )}
+
+                    {/* Admin Quick Actions */}
+                    {user && user.role === "ADMIN" && (
+                      <div className="mt-6 border-t border-gray-700 pt-6">
+                        <div className="flex justify-between items-center">
+                          <p className="text-sm font-semibold text-white">Quick Actions:</p>
+                          <button
+                            onClick={() => navigate("/admin-complaints")}
+                            className="bg-[#00df9a] text-black px-4 py-2 rounded-lg text-sm font-semibold hover:bg-[#00c389] transition-colors duration-200 flex items-center gap-1"
+                          >
+                            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" />
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                            </svg>
+                            Manage in Admin Panel
+                          </button>
+                        </div>
+                      </div>
+                    )}
+                  </>
+                )}
+              </div>
+            ))}
           </div>
         )}
       </div>
     </div>
   );
-};
-
-export default Complaint;
+}

@@ -10,6 +10,7 @@ import java.util.List;
 
 @RestController
 @RequestMapping("/api/halls")
+
 public class HallController {
 
     private final HallService hallService;
@@ -38,6 +39,13 @@ public class HallController {
     @GetMapping("/code/{hallCode}")
     public ResponseEntity<Hall> getHallByCode(@PathVariable String hallCode) {
         return hallService.getHallByCode(hallCode)
+                .map(ResponseEntity::ok)
+                .orElse(ResponseEntity.notFound().build());
+    }
+
+    @GetMapping("/name/{hallName}")
+    public ResponseEntity<Hall> getHallByName(@PathVariable String hallName) {
+        return hallService.getHallByName(hallName)
                 .map(ResponseEntity::ok)
                 .orElse(ResponseEntity.notFound().build());
     }
@@ -112,12 +120,20 @@ public class HallController {
         return ResponseEntity.ok(hallService.getAvailableSeats());
     }
 
+
+@GetMapping("/full-name/{fullName}")
+public ResponseEntity<Hall> getHallByFullName(@PathVariable String fullName) {
+    return hallService.getHallByFullName(fullName)
+            .map(ResponseEntity::ok)
+            .orElse(ResponseEntity.notFound().build());
+}
+
+
     @GetMapping("/statistics/summary")
     public ResponseEntity<List<Object[]>> getHallStatistics() {
         return ResponseEntity.ok(hallService.getHallStatistics());
     }
 
-    // DTO for occupancy update request
     public static class OccupancyRequest {
         private int occupancy;
 
