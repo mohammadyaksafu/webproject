@@ -5,6 +5,7 @@ import com.sust.hall.enums.AccountStatus;
 import com.sust.hall.enums.UserRole;
 import com.sust.hall.service.UserService;
 
+import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
 import org.springframework.http.ResponseEntity;
@@ -15,13 +16,12 @@ import java.util.List;
 @RestController
 @RequestMapping("/api/admin")
 @Slf4j
+@RequiredArgsConstructor
 public class AdminController {
 
     private final UserService userService;
 
-    public AdminController(UserService userService) {
-        this.userService = userService;
-    }
+    
 
     
     @GetMapping("/pending-users")
