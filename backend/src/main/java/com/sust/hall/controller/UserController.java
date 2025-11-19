@@ -1,39 +1,25 @@
 package com.sust.hall.controller;
 
-import com.sust.hall.dto.RegisterRequest;
+import java.util.List;
+
+import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.DeleteMapping;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PutMapping;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RestController;
+
 import com.sust.hall.entity.User;
 import com.sust.hall.enums.UserRole;
 import com.sust.hall.service.UserService;
-import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.*;
 
-import java.util.List;
+import lombok.AllArgsConstructor;
 
-@RestController
-@RequestMapping("/api/users")
-@CrossOrigin(origins = "http://localhost:3000") // Add CORS for React
+@RestController("/api/users")
+@AllArgsConstructor
 public class UserController {
-
     private final UserService userService;
-
-    public UserController(UserService userService) {
-        this.userService = userService;
-    }
-
-    // NEW: Registration endpoint for React form
-    @PostMapping("/register")
-    public ResponseEntity<User> registerUser(@RequestBody RegisterRequest registerRequest) {
-        User createdUser = userService.registerUser(registerRequest);
-        return ResponseEntity.ok(createdUser);
-    }
-
-    // Keep existing endpoints but fix the update method
-    @PostMapping
-    public ResponseEntity<User> createUser(@RequestBody User user) {
-        User createdUser = userService.createUser(user);
-        return ResponseEntity.ok(createdUser);
-    }
-
     @GetMapping
     public ResponseEntity<List<User>> getAllUsers() {
         return ResponseEntity.ok(userService.getAllUsers());

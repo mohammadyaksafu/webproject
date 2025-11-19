@@ -26,7 +26,7 @@ public class HallRepository {
     public HallRepository(JdbcTemplate jdbcTemplate) {
         this.jdbcTemplate = jdbcTemplate;
     }
-
+    
     public Hall save(Hall hall) {
         if (hall.getId() == null) {
             // Insert new hall
