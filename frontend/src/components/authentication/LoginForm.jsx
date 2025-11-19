@@ -1,4 +1,5 @@
 import React, { useState } from "react";
+import axios from "axios";
 import { useNavigate, Link } from "react-router-dom";
 import { Eye, EyeOff } from "lucide-react";
 
@@ -13,10 +14,10 @@ const LoginForm = () => {
     setFormData({ ...formData, [e.target.name]: e.target.value });
   };
 
-  // Validation Rules
+  // Validation
   const validate = () => {
     const { email, password } = formData;
-    const emailRegex = /^[a-zA-Z0-9._%+-]+@sust\.edu$/;
+    const emailRegex = /^[a-zA-Z0-9._%+-]+@([a-zA-Z0-9-]+\.)*sust\.edu$/;
 
     if (!emailRegex.test(email)) {
       return "Only official SUST email is allowed (example: name@sust.edu).";
@@ -40,24 +41,19 @@ const LoginForm = () => {
     setError("");
 
     try {
-      const response = await fetch("http://localhost:8080/api/users");
+      const res = await axios.post("http://localhost:8080/api/auth/login", {
+        email: formData.email,
+        password: formData.password,
+      });
 
-      if (!response.ok) {
-        setError("Server error. Unable to connect.");
+      console.log("API Response:", res.data);
+
+      if (res.data.statusCode !== 200) {
+        setError(res.data.message || "Login failed");
         return;
       }
 
-      const users = await response.json();
-      
-    //  Find user by email AND check password
-      const user = users.find((u) => 
-        u.email === formData.email && u.password === formData.password
-      );
-     // const user = users.find((u) => u.email === formData.email );
-      if (!user) {
-        setError("Invalid email or password.");
-        return;
-      }
+      const { token, data: user } = res.data;
 
       // Account status check
       if (user.accountStatus !== "APPROVED") {
@@ -70,21 +66,15 @@ const LoginForm = () => {
         return;
       }
 
-      // Store user info in localStorage
+      // Save everything in localStorage
+      localStorage.setItem("token", token);
       localStorage.setItem("user", JSON.stringify(user));
       localStorage.setItem("isAuthenticated", "true");
       localStorage.setItem("userId", user.id);
       localStorage.setItem("userRole", user.role);
       localStorage.setItem("userHall", user.hallName);
 
-      console.log("User logged in:", {
-        id: user.id,
-        email: user.email,
-        role: user.role,
-        hallName: user.hallName
-      });
-
-      // Route based on user role
+      // Routing based on role
       switch (user.role) {
         case "ADMIN":
           navigate("/admin");
@@ -96,15 +86,13 @@ const LoginForm = () => {
         case "TEACHER":
           navigate("/dashboard");
           break;
-        case "STUDENT":
         default:
           navigate("/dashboard");
           break;
       }
-
     } catch (err) {
-      console.error(err);
-      setError("Network error. Check if server is running.");
+      console.error("Login Error:", err);
+      setError("Invalid email or password. OR server not running.");
     } finally {
       setLoading(false);
     }
@@ -112,8 +100,13 @@ const LoginForm = () => {
 
   const getErrorStyle = () => {
     if (!error) return "";
-    if (error.includes("pending")) return "bg-yellow-900/40 border border-yellow-700 text-yellow-200";
-    if (error.includes("rejected") || error.includes("Invalid") || error.includes("error"))
+    if (error.includes("pending"))
+      return "bg-yellow-900/40 border border-yellow-700 text-yellow-200";
+    if (
+      error.includes("rejected") ||
+      error.includes("Invalid") ||
+      error.includes("error")
+    )
       return "bg-red-900/40 border border-red-700 text-red-200";
     return "bg-gray-800/40 border border-gray-700 text-gray-200";
   };
@@ -125,19 +118,25 @@ const LoginForm = () => {
         className="bg-black border border-gray-800 p-8 rounded-2xl shadow-2xl w-full max-w-md"
       >
         <div className="text-center mb-8">
-          <h2 className="text-3xl font-bold text-[#00df9a] mb-2">Welcome Back</h2>
+          <h2 className="text-3xl font-bold text-[#00df9a] mb-2">
+            Welcome Back
+          </h2>
           <p className="text-gray-400">Sign in to your SUST account</p>
         </div>
 
         {error && (
-          <div className={`px-4 py-3 rounded-lg mb-6 text-sm ${getErrorStyle()}`}>
+          <div
+            className={`px-4 py-3 rounded-lg mb-6 text-sm ${getErrorStyle()}`}
+          >
             {error}
           </div>
         )}
 
         {/* Email */}
         <div className="mb-6">
-          <label className="block text-gray-300 mb-2 font-medium">SUST Email</label>
+          <label className="block text-gray-300 mb-2 font-medium">
+            SUST Email
+          </label>
           <input
             type="email"
             name="email"
@@ -151,7 +150,9 @@ const LoginForm = () => {
 
         {/* Password */}
         <div className="mb-6 relative">
-          <label className="block text-gray-300 mb-2 font-medium">Password</label>
+          <label className="block text-gray-300 mb-2 font-medium">
+            Password
+          </label>
           <input
             type={showPassword ? "text" : "password"}
             name="password"
@@ -173,7 +174,11 @@ const LoginForm = () => {
         {/* Remember + Forgot */}
         <div className="flex items-center justify-between mb-6">
           <label className="text-gray-400 text-sm flex items-center">
-            <input type="checkbox" className="mr-2 bg-gray-800 border-gray-700" /> Remember me
+            <input
+              type="checkbox"
+              className="mr-2 bg-gray-800 border-gray-700"
+            />{" "}
+            Remember me
           </label>
           <a className="text-[#00df9a] text-sm hover:text-white" href="#">
             Forgot password?
@@ -203,8 +208,8 @@ const LoginForm = () => {
         </div>
 
         <p className="text-center text-xs text-gray-500 mt-6">
-          Access restricted to SUST students and faculty.  
-          New accounts require admin approval.
+          Access restricted to SUST students and faculty. New accounts require
+          admin approval.
         </p>
       </form>
     </div>

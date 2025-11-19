@@ -88,7 +88,8 @@ public class UserService {
         return Response.builder()
                 .statusCode(HttpStatus.OK.value())
                 .message("Login successful")
-                .data(token)
+                .token(token)
+                .data(user)
                 .build();
     }
 

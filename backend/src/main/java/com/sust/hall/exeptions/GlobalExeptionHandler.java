@@ -4,6 +4,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.ControllerAdvice;
 import org.springframework.web.bind.annotation.ExceptionHandler;
+import org.springframework.web.servlet.NoHandlerFoundException;
 
 import com.sust.hall.dto.Response;
 
@@ -36,5 +37,10 @@ public class GlobalExeptionHandler {
                                     .message(e.getMessage())
                                     .build();
         return new ResponseEntity<>(response, HttpStatus.INTERNAL_SERVER_ERROR);
+    }
+
+    @ExceptionHandler(NoHandlerFoundException.class)
+    public ResponseEntity<String> handle404(NoHandlerFoundException ex) {
+        return ResponseEntity.status(404).body("API endpoint not found");
     }
 }

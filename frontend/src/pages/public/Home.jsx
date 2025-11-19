@@ -19,10 +19,12 @@ const Home = () => {
         if (!response.ok) {
           throw new Error('Failed to fetch halls data');
         }
-        
+        if(!response.empty()){
         const hallsData = await response.json();
         setHalls(hallsData);
         setError(null);
+        }
+        
       } catch (err) {
         console.error('Error fetching halls data:', err);
         setError(err.message);

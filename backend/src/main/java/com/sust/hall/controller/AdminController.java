@@ -4,6 +4,9 @@ import com.sust.hall.entity.User;
 import com.sust.hall.enums.AccountStatus;
 import com.sust.hall.enums.UserRole;
 import com.sust.hall.service.UserService;
+
+import lombok.extern.slf4j.Slf4j;
+
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
@@ -11,7 +14,7 @@ import java.util.List;
 
 @RestController
 @RequestMapping("/api/admin")
-
+@Slf4j
 public class AdminController {
 
     private final UserService userService;
@@ -35,6 +38,7 @@ public class AdminController {
    
     @PostMapping("/users/{id}/approve")
     public ResponseEntity<User> approveUser(@PathVariable Long id) {
+        log.info("/approve was hit");
         return ResponseEntity.ok(userService.approveUser(id));
     }
 

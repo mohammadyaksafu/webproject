@@ -11,6 +11,7 @@ import lombok.Data;
 public class Response<T> {
     private int statusCode;
     private String message;
+    private String token;
     private T data;
 }
 
