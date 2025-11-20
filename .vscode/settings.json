@@ -1,4 +1,9 @@
 {
+    "mergeEditor.enabled": true,
+    "git.mergeEditor": true,
+    "workbench.editorAssociations": {
+        "*.conflict": "mergeEditor"
+    },
     "java.compile.nullAnalysis.mode": "automatic",
     "java.configuration.updateBuildConfiguration": "interactive"
 }

@@ -13,49 +13,63 @@ import org.springframework.stereotype.Service;
 
 import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.Jwts;
+import io.jsonwebtoken.security.Keys;
 import jakarta.annotation.PostConstruct;
 
 @Service
-
 public class JwtUtils {
-    private static final long EXP = 30*24*60*60*1000L;
-    private SecretKey key;
+
+    // 30 days
+    private static final long EXPIRATION = 30L * 24 * 60 * 60 * 1000;
 
     @Value("${secretJwtString}")
     private String secretJwtString;
 
+    private SecretKey key;
+
     @PostConstruct
-    private void init(){
-        byte[] keyByte = secretJwtString.getBytes(StandardCharsets.UTF_8);
-        key=new SecretKeySpec(keyByte, "hmacSHA256");
+    private void init() {
+        byte[] keyBytes = secretJwtString.getBytes(StandardCharsets.UTF_8);
+        key = Keys.hmacShaKeyFor(keyBytes);
     }
 
-    public String generateTokenK(String username){
+    public String generateToken(String email, String role) {
         return Jwts.builder()
-                .subject(username)
-                .issuedAt(new Date(System.currentTimeMillis()))
-                .expiration(new Date(System.currentTimeMillis()+EXP))  
+                .setSubject(email)
+                .claim("role", role)
+                .setIssuedAt(new Date())
+                .setExpiration(new Date(System.currentTimeMillis() + EXPIRATION))
                 .signWith(key)
                 .compact();
     }
 
-    public String getUserNameFromToken(String token){
-        return extractedClaims(token, Claims::getSubject);
+    public String extractEmail(String token) {
+        return extractClaim(token, Claims::getSubject);
     }
 
-    private <T> T extractedClaims(String token, Function<Claims, T> claimsFunction  )
-    {
-        return claimsFunction.apply(Jwts.parser().verifyWith(key)
-                    .build().parseSignedClaims(token)
-                    .getPayload());
+    public String extractRole(String token) {
+        return extractClaim(token, claims -> claims.get("role", String.class));
     }
 
-    boolean isTokenValid(String token, UserDetails userdetails){
-        final String username = getUserNameFromToken(token);
-        return (username.equals(userdetails.getUsername()) && !isTokenValid(token));
+    public Date extractExpiration(String token) {
+        return extractClaim(token, Claims::getExpiration);
     }
 
-    private boolean isTokenValid(String token){
-        return extractedClaims(token, Claims::getExpiration).before(new Date());
+    private <T> T extractClaim(String token, Function<Claims, T> resolver) {
+        Claims claims = Jwts.parserBuilder()
+                .setSigningKey(key)
+                .build()
+                .parseClaimsJws(token)
+                .getBody();
+        return resolver.apply(claims);
+    }
+
+    public boolean isValid(String token, UserDetails userDetails) {
+        final String email = extractEmail(token);
+        return email.equals(userDetails.getUsername()) && !isTokenExpired(token);
+    }
+
+    private boolean isTokenExpired(String token) {
+        return extractExpiration(token).before(new Date());
     }
 }

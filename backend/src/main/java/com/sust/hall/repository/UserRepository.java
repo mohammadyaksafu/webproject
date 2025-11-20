@@ -3,6 +3,9 @@ package com.sust.hall.repository;
 import com.sust.hall.entity.User;
 import com.sust.hall.enums.AccountStatus;
 import com.sust.hall.enums.UserRole;
+
+import lombok.extern.slf4j.Slf4j;
+
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.jdbc.core.RowMapper;
 import org.springframework.jdbc.support.GeneratedKeyHolder;
@@ -19,6 +22,7 @@ import java.util.List;
 import java.util.Optional;
 
 @Repository
+@Slf4j
 public class UserRepository {
 
     private final JdbcTemplate jdbcTemplate;
@@ -89,8 +93,10 @@ public class UserRepository {
     }
 
     public boolean existsByEmail(String email) {
+        log.info("in exist by email method");
         String sql = "SELECT COUNT(*) FROM users WHERE email = ?";
         Integer count = jdbcTemplate.queryForObject(sql, Integer.class, email);
+        System.out.println(count);
         return count != null && count > 0;
     }
 

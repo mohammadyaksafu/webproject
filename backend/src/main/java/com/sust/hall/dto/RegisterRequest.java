@@ -9,4 +9,9 @@ public class RegisterRequest {
     private String hallName;
     private String password;
     private String confirmPassword;
+
+    @Override
+    public String toString(){
+        return name + " " + email+ " " +hallName + " " +password + " " +confirmPassword + "\n";
+    }
 }
