@@ -54,7 +54,7 @@ export const routes = [
     ) 
   },
   {
-  path: "/meals",
+  path: "/meal",
   element: (
     <ProtectedRoute>
       <StudentMeal />

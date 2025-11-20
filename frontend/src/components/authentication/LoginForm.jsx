@@ -50,10 +50,10 @@ const LoginForm = () => {
       const users = await response.json();
       
     //  Find user by email AND check password
-      const user = users.find((u) => 
-        u.email === formData.email && u.password === formData.password
-      );
-     // const user = users.find((u) => u.email === formData.email );
+      //const user = users.find((u) => 
+//u.email === formData.email && u.password === formData.password
+      //);
+      const user = users.find((u) => u.email === formData.email );
       if (!user) {
         setError("Invalid email or password.");
         return;

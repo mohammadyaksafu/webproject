@@ -20,7 +20,7 @@ public class UserController {
         this.userService = userService;
     }
 
-    // NEW: Registration endpoint for React form
+    
     @PostMapping("/register")
     public ResponseEntity<User> registerUser(@RequestBody RegisterRequest registerRequest) {
         User createdUser = userService.registerUser(registerRequest);
