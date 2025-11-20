@@ -20,27 +20,6 @@ import lombok.AllArgsConstructor;
 @AllArgsConstructor
 public class UserController {
     private final UserService userService;
-
-
-    public UserController(UserService userService) {
-        this.userService = userService;
-    }
-
-    
-    @PostMapping("/register")
-    public ResponseEntity<User> registerUser(@RequestBody RegisterRequest registerRequest) {
-        User createdUser = userService.registerUser(registerRequest);
-        return ResponseEntity.ok(createdUser);
-    }
-
-    // Keep existing endpoints but fix the update method
-    @PostMapping
-    public ResponseEntity<User> createUser(@RequestBody User user) {
-        User createdUser = userService.createUser(user);
-        return ResponseEntity.ok(createdUser);
-    }
-
-
     @GetMapping
     public ResponseEntity<List<User>> getAllUsers() {
         return ResponseEntity.ok(userService.getAllUsers());
