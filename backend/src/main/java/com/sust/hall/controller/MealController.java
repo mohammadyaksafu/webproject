@@ -28,33 +28,35 @@ public class MealController {
     private MealService mealService;
 
     // POST - Create a new meal
-    @PostMapping
-    public ResponseEntity<?> createMeal(@Valid @RequestBody MealDTO mealDTO) {
-        try {
-            logger.info("Creating new meal: {}", mealDTO.getMealName());
-            
-            MealDTO createdMeal = mealService.createMeal(mealDTO);
-            logger.info("Successfully created meal with ID: {}", createdMeal.getId());
-            
-            Map<String, Object> response = new HashMap<>();
-            response.put("success", true);
-            response.put("message", "Meal created successfully");
-            response.put("data", createdMeal);
-            
-            return ResponseEntity.status(HttpStatus.CREATED).body(response);
-            
-        } catch (EntityNotFoundException e) {
-            logger.error("Hall not found for meal creation: {}", mealDTO.getHallId());
-            Map<String, Object> errorResponse = new HashMap<>();
-            errorResponse.put("success", false);
-            errorResponse.put("message", e.getMessage());
-            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(errorResponse);
-            
-        } catch (Exception e) {
-            logger.error("Error creating meal: {}", mealDTO.getMealName(), e);
-            return errorResponse("Error creating meal", e);
-        }
+   @PostMapping
+public ResponseEntity<?> createMeal(@Valid @RequestBody MealDTO mealDTO) {
+    try {
+        logger.info("Creating new meal: {}", mealDTO.getMealName());
+        logger.info("Meal data - Hall: {}, Type: {}, Price: {}", 
+            mealDTO.getHallName(), mealDTO.getMealType(), mealDTO.getPrice());
+        
+        MealDTO createdMeal = mealService.createMeal(mealDTO);
+        logger.info("Successfully created meal with ID: {}", createdMeal.getId());
+        
+        Map<String, Object> response = new HashMap<>();
+        response.put("success", true);
+        response.put("message", "Meal created successfully");
+        response.put("data", createdMeal);
+        
+        return ResponseEntity.status(HttpStatus.CREATED).body(response);
+        
+    } catch (EntityNotFoundException e) {
+        logger.error("Hall not found for meal creation: {}", mealDTO.getHallName()); // Changed from getHallId()
+        Map<String, Object> errorResponse = new HashMap<>();
+        errorResponse.put("success", false);
+        errorResponse.put("message", e.getMessage());
+        return ResponseEntity.status(HttpStatus.NOT_FOUND).body(errorResponse);
+        
+    } catch (Exception e) {
+        logger.error("Error creating meal: {}", mealDTO.getMealName(), e);
+        return errorResponse("Error creating meal", e);
     }
+}
 
     // POST - Create multiple meals
     @PostMapping("/batch")
@@ -84,33 +86,33 @@ public class MealController {
 
     // PUT - Update an existing meal
     @PutMapping("/{id}")
-    public ResponseEntity<?> updateMeal(@PathVariable Long id, @Valid @RequestBody MealDTO mealDTO) {
-        try {
-            logger.info("Updating meal with ID: {}", id);
-            
-            MealDTO updatedMeal = mealService.updateMeal(id, mealDTO);
-            logger.info("Successfully updated meal with ID: {}", id);
-            
-            Map<String, Object> response = new HashMap<>();
-            response.put("success", true);
-            response.put("message", "Meal updated successfully");
-            response.put("data", updatedMeal);
-            
-            return ResponseEntity.ok(response);
-            
-        } catch (EntityNotFoundException e) {
-            logger.error("Meal not found for update: {}", id);
-            Map<String, Object> errorResponse = new HashMap<>();
-            errorResponse.put("success", false);
-            errorResponse.put("message", e.getMessage());
-            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(errorResponse);
-            
-        } catch (Exception e) {
-            logger.error("Error updating meal with ID: {}", id, e);
-            return errorResponse("Error updating meal", e);
-        }
+public ResponseEntity<?> updateMeal(@PathVariable Long id, @Valid @RequestBody MealDTO mealDTO) {
+    try {
+        logger.info("Updating meal with ID: {}", id);
+        logger.info("Update data - Hall: {}, Meal: {}", mealDTO.getHallName(), mealDTO.getMealName());
+        
+        MealDTO updatedMeal = mealService.updateMeal(id, mealDTO);
+        logger.info("Successfully updated meal with ID: {}", id);
+        
+        Map<String, Object> response = new HashMap<>();
+        response.put("success", true);
+        response.put("message", "Meal updated successfully");
+        response.put("data", updatedMeal);
+        
+        return ResponseEntity.ok(response);
+        
+    } catch (EntityNotFoundException e) {
+        logger.error("Meal or Hall not found for update - Meal ID: {}, Hall: {}", id, mealDTO.getHallName());
+        Map<String, Object> errorResponse = new HashMap<>();
+        errorResponse.put("success", false);
+        errorResponse.put("message", e.getMessage());
+        return ResponseEntity.status(HttpStatus.NOT_FOUND).body(errorResponse);
+        
+    } catch (Exception e) {
+        logger.error("Error updating meal with ID: {}", id, e);
+        return errorResponse("Error updating meal", e);
     }
-
+}
     // PUT - Update meal availability
     @PutMapping("/{id}/availability")
     public ResponseEntity<?> updateMealAvailability(@PathVariable Long id, @RequestBody Map<String, Boolean> availabilityMap) {

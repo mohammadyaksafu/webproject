@@ -1,19 +1,13 @@
 package com.sust.hall.dto;
 
-import lombok.AllArgsConstructor;
-import lombok.Data;
-import lombok.NoArgsConstructor;
-import java.time.LocalDateTime;
 import com.sust.hall.enums.MealType;
+import lombok.Data;
+import java.time.LocalDateTime;
 
 @Data
-@NoArgsConstructor
-@AllArgsConstructor
 public class MealDTO {
     private Long id;
-    private Long hallId;
-    private String hallName;
-    private String hallCode;
+    private String hallName; 
     private MealType mealType;
     private String mealName;
     private String description;

@@ -1,4 +1,3 @@
-// components/DashboardHeader.jsx
 import React from 'react';
 
 const DashboardHeader = ({ onAddMeal, onRefresh }) => {

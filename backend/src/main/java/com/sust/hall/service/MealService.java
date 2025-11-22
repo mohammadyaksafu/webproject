@@ -21,7 +21,7 @@ import java.util.Optional;
 @Transactional
 public class MealService {
 
-    private static final Logger logger = LoggerFactory.getLogger(MealService.class); // ADD THIS LINE
+    private static final Logger logger = LoggerFactory.getLogger(MealService.class);
 
     @Autowired
     private MealRepository mealRepository;
@@ -169,10 +169,11 @@ public class MealService {
                 .collect(Collectors.toList());
     }
 
-    // Create meal
+    // Create meal - UPDATED to use hallName
     public MealDTO createMeal(MealDTO mealDTO) {
-        Hall hall = hallRepository.findById(mealDTO.getHallId())
-                .orElseThrow(() -> new EntityNotFoundException("Hall not found with ID: " + mealDTO.getHallId()));
+        // Find hall by name instead of ID
+        Hall hall = hallRepository.findByHallName(mealDTO.getHallName())
+                .orElseThrow(() -> new EntityNotFoundException("Hall not found with name: " + mealDTO.getHallName()));
 
         Meal meal = new Meal();
         meal.setHall(hall);
@@ -188,10 +189,17 @@ public class MealService {
         return convertToDTO(savedMeal);
     }
 
-    // Update meal
+    // Update meal - UPDATED to handle hallName if provided
     public MealDTO updateMeal(Long id, MealDTO mealDTO) {
         Meal meal = mealRepository.findById(id)
                 .orElseThrow(() -> new EntityNotFoundException("Meal not found with ID: " + id));
+
+        // If hallName is provided in update, change the hall
+        if (mealDTO.getHallName() != null && !mealDTO.getHallName().isEmpty()) {
+            Hall hall = hallRepository.findByHallName(mealDTO.getHallName())
+                    .orElseThrow(() -> new EntityNotFoundException("Hall not found with name: " + mealDTO.getHallName()));
+            meal.setHall(hall);
+        }
 
         if (mealDTO.getMealName() != null) {
             meal.setMealName(mealDTO.getMealName());
@@ -248,13 +256,11 @@ public class MealService {
         }
     }
 
-    
+    // Convert to DTO - UPDATED to use only hallName
     private MealDTO convertToDTO(Meal meal) {
         MealDTO dto = new MealDTO();
         dto.setId(meal.getId());
-        dto.setHallId(meal.getHall().getId());
-        dto.setHallName(meal.getHall().getHallName());
-        dto.setHallCode(meal.getHall().getHallCode());
+        dto.setHallName(meal.getHall().getHallName()); // Only set hallName
         dto.setMealType(meal.getMealType());
         dto.setMealName(meal.getMealName());
         dto.setDescription(meal.getDescription());

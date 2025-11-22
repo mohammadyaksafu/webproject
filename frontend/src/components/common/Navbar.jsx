@@ -39,7 +39,7 @@ const Navbar = () => {
       case 'STUDENT':
         return [
           ...baseNav,
-          { path: "/complaints", label: "My Complaints" },
+          { path: "/complaints", label: "Complaints" },
           { path: "/submit-complaint", label: "Submit Complaint" },
           { path: "/meal", label: "Meal Menu" },
           { path: "/profile", label: "Profile" }
