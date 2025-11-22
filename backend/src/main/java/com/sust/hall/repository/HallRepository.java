@@ -21,6 +21,7 @@ import java.util.Optional;
 @Repository
 public class HallRepository {
 
+
     private final JdbcTemplate jdbcTemplate;
 
     public HallRepository(JdbcTemplate jdbcTemplate) {
@@ -325,4 +326,6 @@ public boolean existsByHallNameIgnoreCase(String hallName) {
         return hall;
     }
 }
+
+
 }

@@ -305,55 +305,7 @@ const Profile = () => {
           </div>
         </div>
 
-        {/* Account Actions */}
-        <div className="mt-8 bg-gray-900 rounded-xl border border-gray-800 p-6">
-          <h3 className="text-xl font-bold text-[#00df9a] mb-6">Account Actions</h3>
-          
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <button
-              onClick={() => navigate("/change-password")}
-              className="bg-blue-600 text-white px-6 py-4 rounded-lg font-semibold hover:bg-blue-700 transition-colors duration-200 flex items-center gap-3"
-            >
-              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 7a2 2 0 012 2m4 0a6 6 0 01-7.743 5.743L11 17H9v2H7v2H4a1 1 0 01-1-1v-2.586a1 1 0 01.293-.707l5.964-5.964A6 6 0 1121 9z" />
-              </svg>
-              Change Password
-            </button>
-            
-            <button
-              onClick={() => navigate("/complaints")}
-              className="bg-orange-600 text-white px-6 py-4 rounded-lg font-semibold hover:bg-orange-700 transition-colors duration-200 flex items-center gap-3"
-            >
-              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
-              </svg>
-              My Complaints
-            </button>
-          </div>
-        </div>
-
-        {/* Additional Info */}
-        <div className="mt-8 bg-gray-900 rounded-xl border border-gray-800 p-6">
-          <h3 className="text-xl font-bold text-[#00df9a] mb-4">Account Details</h3>
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6 text-sm">
-            <div>
-              <p className="text-gray-400">Member Since</p>
-              <p className="text-white font-semibold">
-                {user.createdAt ? new Date(user.createdAt).toLocaleDateString() : "N/A"}
-              </p>
-            </div>
-            <div>
-              <p className="text-gray-400">Last Login</p>
-              <p className="text-white font-semibold">
-                {user.lastLogin ? new Date(user.lastLogin).toLocaleDateString() : "Today"}
-              </p>
-            </div>
-            <div>
-              <p className="text-gray-400">Account Type</p>
-              <p className="text-[#00df9a] font-semibold">{user.role} Account</p>
-            </div>
-          </div>
-        </div>
+       
       </div>
     </div>
   );
