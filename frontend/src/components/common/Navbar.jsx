@@ -27,7 +27,7 @@ const Navbar = () => {
     return location.pathname === path;
   };
 
-  // Role-based navigation configuration
+
   const getRoleBasedNav = (user) => {
     const baseNav = [
       { path: "/dashboard", label: "Dashboard" }
@@ -54,15 +54,13 @@ const Navbar = () => {
       case 'ADMIN':
         return [
           ...baseNav,
-          { path: "/complaints", label: "All Complaints" },
+          { path: "/admin-complaints", label: "All Complaints" },
           { path: "/profile", label: "Profile" }
         ];
       
       case 'CANTEEN_MANAGER':
         return [
           ...baseNav,
-          { path: "/meal", label: "Menu Management" },
-          { path: "/canteen-reports", label: "Reports" },
           { path: "/profile", label: "Profile" }
         ];
       
@@ -152,13 +150,12 @@ const Navbar = () => {
     <header className="bg-black text-white shadow-lg sticky top-0 z-50">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 py-3 flex items-center justify-between">
         {/* Logo */}
-        <a 
-          href="/" 
-          className="text-xl sm:text-2xl font-bold text-[#00df9a] whitespace-nowrap"
-          onClick={closeAllMenus}
-        >
-          SUST Hall Management
-        </a>
+        <div className="flex items-center cursor-pointer" onClick={() => { navigate('/'); closeAllMenus(); }}>
+           <div className="w-10 h-10 bg-[#00df9a] rounded-lg flex items-center justify-center mr-3">
+      <img src="https://www.sust.edu/public/img/sust_logo_big.png" alt="SUST Logo" className="h-6 w-6" />
+            </div>
+              <h3 className="text-2xl font-bold">SUST Hall Management</h3>
+        </div>
 
         {/* Desktop Navigation */}
         <nav className="hidden lg:flex items-center gap-4">

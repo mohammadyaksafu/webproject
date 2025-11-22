@@ -1,6 +1,5 @@
 import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import AdminHeader from "./components/AdminHeader";
 import AdminTabs from "./components/AdminTabs";
 import PendingUsersTab from "./components/PendingUsersTab";
 import AllUsersTab from "./components/AllUsersTab";
@@ -12,14 +11,14 @@ const AdminDashboard = () => {
   const [pendingUsers, setPendingUsers] = useState([]);
   const [allUsers, setAllUsers] = useState([]);
   const [halls, setHalls] = useState([]);
-  const [complaints, setComplaints] = useState([]); // Add complaints state
+  const [complaints, setComplaints] = useState([]); 
   const [loading, setLoading] = useState(true);
   const [activeTab, setActiveTab] = useState("pending");
   const navigate = useNavigate();
 
   const user = JSON.parse(localStorage.getItem('user') || '{}');
 
-  // Check if user is admin
+  
   if (user.role !== 'ADMIN') {
     return (
       <div className="min-h-screen bg-gradient-to-br from-gray-900 to-black py-8 px-4">
@@ -48,7 +47,7 @@ const AdminDashboard = () => {
         fetch('http://localhost:8080/api/admin/pending-users'),
         fetch('http://localhost:8080/api/admin/users'),
         fetch('http://localhost:8080/api/halls'),
-        fetch('http://localhost:8080/api/complaints') // Fetch complaints
+        fetch('http://localhost:8080/api/complaints') 
       ]);
 
       if (pendingResponse.ok) {
@@ -161,7 +160,7 @@ const AdminDashboard = () => {
     }
   };
 
-  // Hall Management Functions
+ 
   const handleCreateHall = async (hallData) => {
     try {
       const response = await fetch('http://localhost:8080/api/halls', {
@@ -183,26 +182,31 @@ const AdminDashboard = () => {
     }
   };
 
-  const handleUpdateHall = async (id, hallData) => {
-    try {
-      const response = await fetch(`http://localhost:8080/api/halls/${id}`, {
-        method: 'PUT',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(hallData)
-      });
+ const handleUpdateHall = async (id, hallData) => {
+  try {
+    console.log('Updating hall with ID:', id, 'Data:', hallData);
+    
+    const response = await fetch(`http://localhost:8080/api/halls/${id}`, {
+      method: 'PUT',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify(hallData),
+    });
 
-      if (response.ok) {
-        fetchAllData();
-        return true;
-      }
-      return false;
-    } catch (error) {
-      console.error('Error updating hall:', error);
-      return false;
+    if (!response.ok) {
+      const errorText = await response.text();
+      throw new Error(`HTTP error! status: ${response.status}, message: ${errorText}`);
     }
-  };
+
+    const updatedHall = await response.json();
+    console.log('Hall updated successfully:', updatedHall);
+    return updatedHall;
+  } catch (error) {
+    console.error('Error updating hall:', error);
+    throw new Error(`Failed to update hall: ${error.message}`);
+  }
+};
 
   const handleDeleteHall = async (id) => {
     if (window.confirm('Are you sure you want to delete this hall?')) {
@@ -318,8 +322,7 @@ const AdminDashboard = () => {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-gray-900 to-black py-8 px-4">
-      <div className="max-w-7xl mx-auto"> {/* Increased max-width for better layout */}
-        <AdminHeader navigate={navigate} />
+      <div className="max-w-7xl mx-auto"> 
         
         <AdminTabs 
           activeTab={activeTab}
@@ -327,7 +330,7 @@ const AdminDashboard = () => {
           pendingCount={pendingUsers.length}
           allCount={allUsers.length}
           hallsCount={halls.length}
-          complaintsCount={complaints.length} // Add complaints count
+          complaintsCount={complaints.length} 
         />
 
         {/* Pending Users Tab */}

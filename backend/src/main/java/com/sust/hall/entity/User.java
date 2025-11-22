@@ -36,13 +36,12 @@ public class User {
     @Column(name = "created_at", nullable = false)
     private LocalDateTime createdAt;
 
-    // Default constructor
+   
     public User() {
         this.createdAt = LocalDateTime.now();
-        this.accountStatus = AccountStatus.PENDING; // Default status
+        this.accountStatus = AccountStatus.PENDING;
     }
 
-    // Constructor without id and createdAt
     public User(String name, String email, String hallName, UserRole role, String password,
             AccountStatus accountStatus) {
         this();
@@ -54,7 +53,7 @@ public class User {
         this.accountStatus = accountStatus;
     }
 
-    // Getters and Setters (same as before)
+   
     public Long getId() {
         return id;
     }
@@ -113,7 +112,7 @@ public class User {
         this.createdAt = createdAt;
     }
 
-    // equals, hashCode, toString, and business methods (same as before)
+    
     @Override
     public boolean equals(Object o) {
         if (this == o)

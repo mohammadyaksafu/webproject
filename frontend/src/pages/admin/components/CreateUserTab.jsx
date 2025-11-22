@@ -13,12 +13,12 @@ const CreateUserTab = ({ onCreateUser }) => {
   const [message, setMessage] = useState("");
 
   const halls = [
-    "Shah Paran Hall (SHPH)",
-    "Bijoy 24 Hall (B24H)",
-    "Syed Mujtaba Ali Hall (SMAH)",
-    "Ayesha Siddiqa Hall (ASH)",
-    "Begum Sirajunnesa Chowdhury Hall (BSCH)",
-    "Fatimah Tuz Zahra Hall (FTZH)"
+    "Shah Paran Hall",
+    "Bijoy 24 Hall",
+    "Syed Mujtaba Ali Hall",
+    "Ayesha Siddiqa Hall",
+    "Begum Sirajunnesa Chowdhury Hall",
+    "Fatimah Tuz Zahra Hall"
   ];
 
   const roles = [

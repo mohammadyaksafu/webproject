@@ -64,13 +64,24 @@ public class Hall {
 
     @Column(name = "updated_at")
     private LocalDateTime updatedAt;
-
+    @Column(name = "hall_short_name")
+    private String hallShortName;
+    
     @PrePersist
     protected void onCreate() {
         createdAt = LocalDateTime.now();
         updatedAt = LocalDateTime.now();
     }
+     
 
+    
+    public String getHallShortName() {
+        return hallShortName;
+    }
+
+    public void setHallShortName(String hallShortName) {
+        this.hallShortName = hallShortName;
+    }
     @PreUpdate
     protected void onUpdate() {
         updatedAt = LocalDateTime.now();

@@ -10,7 +10,6 @@ import java.util.List;
 
 @RestController
 @RequestMapping("/api/halls")
-
 public class HallController {
 
     private final HallService hallService;
@@ -66,42 +65,60 @@ public class HallController {
     }
 
     @PostMapping
-    public ResponseEntity<Hall> createHall(@RequestBody Hall hall) {
+    public ResponseEntity<?> createHall(@RequestBody Hall hall) {
         try {
+            System.out.println("Received hall: " + hall);
+            System.out.println("Hall code: " + hall.getHallCode());
+            System.out.println("Hall name: " + hall.getHallName());
+            System.out.println("Hall type: " + hall.getType());
+            
             Hall createdHall = hallService.createHall(hall);
             return ResponseEntity.ok(createdHall);
         } catch (RuntimeException e) {
-            return ResponseEntity.badRequest().build();
+            System.out.println("Error creating hall: " + e.getMessage());
+            e.printStackTrace();
+            return ResponseEntity.badRequest().body(e.getMessage());
         }
     }
 
     @PutMapping("/{id}")
-    public ResponseEntity<Hall> updateHall(@PathVariable Long id, @RequestBody Hall hallDetails) {
+    public ResponseEntity<?> updateHall(@PathVariable Long id, @RequestBody Hall hallDetails) {
         try {
+            System.out.println("Updating hall with ID: " + id);
+            System.out.println("Update data: " + hallDetails);
+            
             Hall updatedHall = hallService.updateHall(id, hallDetails);
             return ResponseEntity.ok(updatedHall);
         } catch (RuntimeException e) {
-            return ResponseEntity.notFound().build();
+            System.out.println("Error updating hall: " + e.getMessage());
+            e.printStackTrace();
+            return ResponseEntity.badRequest().body(e.getMessage());
         }
     }
 
     @DeleteMapping("/{id}")
-    public ResponseEntity<Void> deleteHall(@PathVariable Long id) {
+    public ResponseEntity<?> deleteHall(@PathVariable Long id) {
         try {
+            System.out.println("Deleting hall with ID: " + id);
             hallService.deleteHall(id);
             return ResponseEntity.noContent().build();
         } catch (RuntimeException e) {
-            return ResponseEntity.notFound().build();
+            System.out.println("Error deleting hall: " + e.getMessage());
+            e.printStackTrace();
+            return ResponseEntity.badRequest().body(e.getMessage());
         }
     }
 
     @PutMapping("/{id}/occupancy")
-    public ResponseEntity<Hall> updateOccupancy(@PathVariable Long id, @RequestBody OccupancyRequest request) {
+    public ResponseEntity<?> updateOccupancy(@PathVariable Long id, @RequestBody OccupancyRequest request) {
         try {
+            System.out.println("Updating occupancy for hall ID: " + id + " to: " + request.getOccupancy());
             Hall updatedHall = hallService.updateOccupancy(id, request.getOccupancy());
             return ResponseEntity.ok(updatedHall);
         } catch (RuntimeException e) {
-            return ResponseEntity.badRequest().build();
+            System.out.println("Error updating occupancy: " + e.getMessage());
+            e.printStackTrace();
+            return ResponseEntity.badRequest().body(e.getMessage());
         }
     }
 
@@ -120,14 +137,12 @@ public class HallController {
         return ResponseEntity.ok(hallService.getAvailableSeats());
     }
 
-
-@GetMapping("/full-name/{fullName}")
-public ResponseEntity<Hall> getHallByFullName(@PathVariable String fullName) {
-    return hallService.getHallByFullName(fullName)
-            .map(ResponseEntity::ok)
-            .orElse(ResponseEntity.notFound().build());
-}
-
+    @GetMapping("/full-name/{fullName}")
+    public ResponseEntity<Hall> getHallByFullName(@PathVariable String fullName) {
+        return hallService.getHallByFullName(fullName)
+                .map(ResponseEntity::ok)
+                .orElse(ResponseEntity.notFound().build());
+    }
 
     @GetMapping("/statistics/summary")
     public ResponseEntity<List<Object[]>> getHallStatistics() {

@@ -6,7 +6,7 @@ const RegisterForm = () => {
   const [formData, setFormData] = useState({
     name: "",
     email: "",
-    hallName: "", // Changed from 'hall' to match backend
+    hallName: "", 
     password: "",
     confirmPassword: "",
   });
@@ -16,12 +16,12 @@ const RegisterForm = () => {
   const navigate = useNavigate();
 
   const halls = [
-    { value: "Shah Paran Hall (SHPH)", label: "Shah Paran Hall (SHPH)" },
-    { value: "Bijoy 24 Hall (B24H)", label: "Bijoy 24 Hall (B24H)" },
-    { value: "Syed Mujtaba Ali Hall (SMAH)", label: "Syed Mujtaba Ali Hall (SMAH)" },
-    { value: "Ayesha Siddiqa Hall (ASH)", label: "Ayesha Siddiqa Hall (ASH)" },
-    { value: "Begum Sirajunnesa Chowdhury Hall (BSCH)", label: "Begum Sirajunnesa Chowdhury Hall (BSCH)" },
-    { value: "Fatimah Tuz Zahra Hall (FTZH)", label: "Fatimah Tuz Zahra Hall (FTZH)" }
+    { value: "Shah Paran Hall", label: "Shah Paran Hall" },
+    { value: "Bijoy 24 Hall", label: "Bijoy 24 Hall" },
+    { value: "Syed Mujtaba Ali Hall", label: "Syed Mujtaba Ali Hall" },
+    { value: "Ayesha Siddiqa Hall", label: "Ayesha Siddiqa Hall" },
+    { value: "Begum Sirajunnesa Chowdhury Hall", label: "Begum Sirajunnesa Chowdhury Hall" },
+    { value: "Fatimah Tuz Zahra Hall", label: "Fatimah Tuz Zahra Hall" }
   ];
 
   const handleChange = (e) => {
@@ -29,7 +29,7 @@ const RegisterForm = () => {
   };
 
   const handleHallSelect = (hallValue) => {
-    setFormData({ ...formData, hallName: hallValue }); // Updated to hallName
+    setFormData({ ...formData, hallName: hallValue }); 
     setShowHallDropdown(false);
   };
 
@@ -37,8 +37,8 @@ const RegisterForm = () => {
     e.preventDefault();
     const { name, email, hallName, password, confirmPassword } = formData;
 
-    // Client-side validation
-    const emailRegex = /^[a-zA-Z0-9._%+-]+@sust\.edu$/;
+   
+    const emailRegex = /^[a-zA-Z0-9._%+-]+@([a-zA-Z0-9-]+\.)*sust\.edu$/;
 
     if (!name.trim()) {
       setError("Full name is required.");
@@ -46,7 +46,7 @@ const RegisterForm = () => {
     }
 
     if (!emailRegex.test(email)) {
-      setError("Only official SUST email is allowed (e.g., name@sust.edu)");
+      setError("Only official SUST email is allowed (e.g., name@department.sust.edu)");
       return;
     }
 
@@ -77,7 +77,7 @@ const RegisterForm = () => {
         body: JSON.stringify({
           name: formData.name,
           email: formData.email,
-          hallName: formData.hallName, // Match backend field name
+          hallName: formData.hallName,
           password: formData.password,
           confirmPassword: formData.confirmPassword
         }),
@@ -87,11 +87,9 @@ const RegisterForm = () => {
         const user = await response.json();
         console.log("Registration Successful:", user);
         
-        // Show success message
-        setError(""); // Clear any errors
+        setError(""); 
         alert("Registration successful! You can now login.");
-        
-        // Redirect to login page
+
         navigate("/login");
       } else {
         const errorData = await response.json();
@@ -229,28 +227,6 @@ const RegisterForm = () => {
           />
         </div>
 
-        {/* Terms and Conditions */}
-        <div className="mb-6">
-          <label className="flex items-start text-gray-400 text-sm">
-            <input 
-              type="checkbox" 
-              className="mr-2 bg-gray-800 border-gray-700 text-[#00df9a] focus:ring-[#00df9a] mt-1" 
-              required
-              disabled={loading}
-            />
-            <span>
-              I agree to the{" "}
-              <a href="#" className="text-[#00df9a] hover:text-white transition-colors duration-200">
-                Terms of Service
-              </a>{" "}
-              and{" "}
-              <a href="#" className="text-[#00df9a] hover:text-white transition-colors duration-200">
-                Privacy Policy
-              </a>
-            </span>
-          </label>
-        </div>
-
         {/* Register Button */}
         <button
           type="submit"
@@ -292,14 +268,6 @@ const RegisterForm = () => {
           >
             Sign In to Existing Account
           </Link>
-        </div>
-
-        {/* Footer Note */}
-        <div className="mt-6 text-center">
-          <p className="text-xs text-gray-500">
-            Registration requires valid SUST email address
-          </p>
-         
         </div>
       </form>
     </div>

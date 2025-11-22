@@ -17,7 +17,7 @@ export default function Complaint() {
   const navigate = useNavigate();
 
   useEffect(() => {
-    // Get user from localStorage
+  
     const userData = JSON.parse(localStorage.getItem("user"));
     setUser(userData);
     fetchComplaints();

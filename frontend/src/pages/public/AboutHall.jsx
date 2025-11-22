@@ -1,24 +1,6 @@
 import React, { useState, useEffect } from "react";
-import { 
-  Users, 
-  MapPin, 
-  Building2, 
-  Star, 
-  Wifi, 
-  Utensils, 
-  BookOpen, 
-  Phone, 
-  Mail,
-  Search,
-  Filter,
-  ChevronDown,
-  ChevronUp,
-  Shield,
-  Dumbbell,
-  TreePine,
-  Eye,
-  Loader2
-} from "lucide-react";
+import {   Users,  MapPin,   Building2,   Star,   Wifi,   Utensils,   BookOpen,   Phone,   Mail,  Search, Filter, ChevronDown,  ChevronUp,  Shield,  Dumbbell,  TreePine, Eye,  Loader2  } from "lucide-react";
+import Footer from "../../components/common/Footer";
 
 export default function AboutHall() {
   const [halls, setHalls] = useState([]);
@@ -49,7 +31,7 @@ export default function AboutHall() {
         const hallsData = await response.json();
         setHalls(hallsData);
         
-        // Calculate statistics
+        
         const totalCapacity = hallsData.reduce((sum, hall) => sum + hall.capacity, 0);
         const totalOccupancy = hallsData.reduce((sum, hall) => sum + hall.currentOccupancy, 0);
         const availableSeats = totalCapacity - totalOccupancy;
@@ -72,7 +54,7 @@ export default function AboutHall() {
     fetchHallsData();
   }, []);
 
-  // Fetch hall statistics from backend
+  
   useEffect(() => {
     const fetchStatistics = async () => {
       try {
@@ -104,7 +86,7 @@ export default function AboutHall() {
     }
   }, [halls]);
 
-  // Filter halls based on search and type
+  
   const filteredHalls = halls.filter(hall => {
     const matchesSearch = hall.hallName?.toLowerCase().includes(searchTerm.toLowerCase()) ||
                          hall.hallCode?.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -177,22 +159,7 @@ export default function AboutHall() {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100 py-12">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        {/* Header Section */}
-        <div className="text-center mb-16">
-          <div className="inline-flex items-center justify-center p-3 bg-gradient-to-r from-[#00df9a] to-green-500 rounded-full mb-6">
-            <Building2 className="h-8 w-8 text-white" />
-          </div>
-          <h1 className="text-4xl md:text-5xl font-bold text-gray-900 mb-6">
-            About SUST Halls
-          </h1>
-          <p className="text-xl text-gray-600 max-w-3xl mx-auto leading-relaxed">
-            Shahjalal University of Science & Technology provides comfortable and modern residential 
-            facilities for students. Explore our halls with state-of-the-art amenities and 
-            vibrant campus life.
-          </p>
-        </div>
-
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 ">
         {/* Search and Filter Section */}
         <div className="mb-8">
           <div className="flex flex-col md:flex-row gap-4 justify-between items-center">
@@ -396,22 +363,10 @@ export default function AboutHall() {
             <p className="text-gray-600">Try adjusting your search or filter criteria</p>
           </div>
         )}
-
-        {/* Additional Info Section */}
-        <div className="mt-16 bg-gradient-to-r from-[#00df9a] to-green-500 rounded-2xl p-8 text-white text-center">
-          <h2 className="text-2xl md:text-3xl font-bold mb-4">
-            Need More Information?
-          </h2>
-          <p className="text-lg mb-6 opacity-90 max-w-2xl mx-auto">
-            Contact the Hall Administration office for detailed information about seat availability, 
-            allocation process, and specific hall regulations.
-          </p>
-          <button className="bg-white text-black px-8 py-3 rounded-lg font-bold hover:bg-gray-100 transition-all duration-300 transform hover:scale-105 flex items-center justify-center mx-auto">
-            <Phone className="h-5 w-5 mr-2" />
-            Contact Hall Administration
-          </button>
-        </div>
+        <div className="mb-10"></div>
+      <Footer/> 
       </div>
+       
     </div>
   );
 }

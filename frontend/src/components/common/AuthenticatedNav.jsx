@@ -44,16 +44,9 @@ const AuthenticatedNav = ({ user, isActiveRoute, handleLogout }) => {
                 className="flex items-center gap-2 px-3 py-2 text-sm text-gray-300 hover:bg-gray-700 rounded-md transition-colors duration-200"
                 onClick={closeAllMenus}
               >
-                👤 Profile
+                Profile
               </a>
               
-              <a
-                href="/settings"
-                className="flex items-center gap-2 px-3 py-2 text-sm text-gray-300 hover:bg-gray-700 rounded-md transition-colors duration-200"
-                onClick={closeAllMenus}
-              >
-                ⚙️ Settings
-              </a>
               
               <button
                 onClick={handleLogout}

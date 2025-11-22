@@ -70,26 +70,6 @@ const Feature = () => {
             </div>
           ))}
         </div>
-
-        {/* Additional Info Card */}
-        <div className="mt-12 bg-gradient-to-r from-[#00df9a] to-green-500 rounded-2xl p-8 text-center">
-          <div className="flex items-center justify-center mb-4">
-            <Home className="h-8 w-8 text-black mr-3" />
-            <h3 className="text-2xl font-bold text-black">
-              Your Home Away From Home
-            </h3>
-          </div>
-          <p className="text-gray-900 text-lg mb-4 max-w-2xl mx-auto">
-            Experience comfortable and secure campus living with all essential services integrated into one platform
-          </p>
-          <div className="flex flex-wrap justify-center items-center gap-2 text-sm text-gray-800">
-            <div className="bg-black/20 px-3 py-1 rounded-full">Secure</div>
-            <div className="bg-black/20 px-3 py-1 rounded-full">Easy to Use</div>
-            <div className="bg-black/20 px-3 py-1 rounded-full">24/7 Access</div>
-            <div className="bg-black/20 px-3 py-1 rounded-full">Real-time Updates</div>
-            <div className="bg-black/20 px-3 py-1 rounded-full">Mobile Friendly</div>
-          </div>
-        </div>
       </div>
     </section>
   );

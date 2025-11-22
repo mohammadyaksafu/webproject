@@ -20,7 +20,7 @@ const LoginForm = () => {
     const emailRegex = /^[a-zA-Z0-9._%+-]+@([a-zA-Z0-9-]+\.)*sust\.edu$/;
 
     if (!emailRegex.test(email)) {
-      return "Only official SUST email is allowed (example: name@sust.edu).";
+      return "Only official SUST email is allowed (example: name@department.sust.edu).";
     }
     if (password.length < 6) {
       return "Password must be at least 6 characters.";
@@ -53,21 +53,16 @@ const LoginForm = () => {
         return;
       }
 
+     
+      const user = res.data.data;
+      const token = res.data.token;
 
-      const users = await response.json();
-      
-    //  Find user by email AND check password
-      //const user = users.find((u) => 
-//u.email === formData.email && u.password === formData.password
-      //);
-      const user = users.find((u) => u.email === formData.email );
       if (!user) {
         setError("Invalid email or password.");
         return;
       }
 
-
-      // Account status check
+      
       if (user.accountStatus !== "APPROVED") {
         const msg = {
           PENDING: "Your account is pending approval. Please wait.",
@@ -78,15 +73,18 @@ const LoginForm = () => {
         return;
       }
 
-      // Save everything in localStorage
+      
       localStorage.setItem("token", token);
       localStorage.setItem("user", JSON.stringify(user));
       localStorage.setItem("isAuthenticated", "true");
       localStorage.setItem("userId", user.id);
       localStorage.setItem("userRole", user.role);
       localStorage.setItem("userHall", user.hallName);
+      
 
-      // Routing based on role
+
+
+      
       switch (user.role) {
         case "ADMIN":
           navigate("/admin");
@@ -102,6 +100,7 @@ const LoginForm = () => {
           navigate("/dashboard");
           break;
       }
+
     } catch (err) {
       console.error("Login Error:", err);
       setError("Invalid email or password. OR server not running.");
@@ -109,6 +108,8 @@ const LoginForm = () => {
       setLoading(false);
     }
   };
+
+
 
   const getErrorStyle = () => {
     if (!error) return "";
@@ -201,9 +202,8 @@ const LoginForm = () => {
         <button
           type="submit"
           disabled={loading}
-          className={`w-full py-3 bg-[#00df9a] text-black font-bold rounded-lg transition-all transform hover:scale-[1.02] active:scale-[0.98] ${
-            loading ? "opacity-50 cursor-not-allowed" : ""
-          }`}
+          className={`w-full py-3 bg-[#00df9a] text-black font-bold rounded-lg transition-all transform hover:scale-[1.02] active:scale-[0.98] ${loading ? "opacity-50 cursor-not-allowed" : ""
+            }`}
         >
           {loading ? "Signing In..." : "Login"}
         </button>

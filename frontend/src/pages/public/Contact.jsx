@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { Phone, Mail, MapPin, User, Building2, Clock, Send, Loader2, Eye } from "lucide-react";
+import Footer from "../../components/common/Footer";
 
 export default function Contact() {
   const [selectedHall, setSelectedHall] = useState(0);
@@ -13,7 +14,6 @@ export default function Contact() {
     { name: "IT Support", phone: "+8801712227777" }
   ];
 
-  // Fetch halls data from backend
   useEffect(() => {
     const fetchHallsData = async () => {
       try {
@@ -74,20 +74,7 @@ export default function Contact() {
   return (
     <div className="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100 py-12">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        {/* Header Section */}
-        <div className="text-center mb-16">
-          <div className="inline-flex items-center justify-center p-3 bg-gradient-to-r from-[#00df9a] to-green-500 rounded-full mb-6">
-            <Building2 className="h-8 w-8 text-white" />
-          </div>
-          <h1 className="text-4xl md:text-5xl font-bold text-gray-900 mb-6">
-            Hall Administration Contact
-          </h1>
-          <p className="text-xl text-gray-600 max-w-3xl mx-auto leading-relaxed">
-            Get in touch with your hall administration for any queries, issues, or support. 
-            Our dedicated team is here to help you with hall-related matters.
-          </p>
-        </div>
-
+        
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
           {/* Hall Selection Sidebar */}
           <div className="lg:col-span-1">
@@ -142,7 +129,7 @@ export default function Contact() {
               {/* Hall Header with Image */}
               <div className="relative h-48 bg-gradient-to-r from-gray-900 to-black">
                 <img
-                  src={selectedHallData.imageUrl || "https://images.unsplash.com/photo-1562774053-701939374585?ixlib=rb-4.0.3&auto=format&fit=crop&w=500&q=80"}
+                  src={selectedHallData.imageUrl}
                   alt={selectedHallData.hallName}
                   className="w-full h-full object-cover opacity-60"
                 />
@@ -255,20 +242,11 @@ export default function Contact() {
                   )}
                 </div>
               </div>
-            </div>
-
-            {/* General Information */}
-            <div className="mt-8 bg-gradient-to-r from-[#00df9a] to-green-500 rounded-2xl p-8 text-white">
-              <h3 className="text-2xl font-bold mb-4">Important Notes</h3>
-              <ul className="space-y-2 text-white/90">
-                <li>• Always use your SUST email for official communication</li>
-                <li>• Include your student ID and hall name in all correspondence</li>
-                <li>• For urgent matters, visit the hall office during office hours</li>
-                <li>• Emergency contacts are available 24/7 for critical situations</li>
-              </ul>
-            </div>
+            </div>           
           </div>
         </div>
+      <div className="mt-12"></div>
+        <Footer />
       </div>
     </div>
   );

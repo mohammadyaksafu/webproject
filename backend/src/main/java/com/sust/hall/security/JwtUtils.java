@@ -22,14 +22,14 @@ public class JwtUtils {
     // 30 days
     private static final long EXPIRATION = 30L * 24 * 60 * 60 * 1000;
 
-    @Value("${secretJwtString}")
-    private String secretJwtString;
+      @Value("${jwt.secret}")
+    private String jwtSecret;
 
     private SecretKey key;
 
     @PostConstruct
     private void init() {
-        byte[] keyBytes = secretJwtString.getBytes(StandardCharsets.UTF_8);
+        byte[] keyBytes = jwtSecret.getBytes(StandardCharsets.UTF_8);
         key = Keys.hmacShaKeyFor(keyBytes);
     }
 

@@ -5,6 +5,7 @@ import com.sust.hall.entity.Hall;
 import com.sust.hall.enums.HallType;
 import com.sust.hall.repository.HallRepository;
 
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
 
@@ -45,28 +46,57 @@ public class HallService {
         return hallRepository.findFemaleHalls();
     }
 
-    public Hall createHall(Hall hall) {
-        // Validate hall code uniqueness
-        if (hallRepository.existsByHallCode(hall.getHallCode())) {
-            throw new RuntimeException("Hall with code " + hall.getHallCode() + " already exists");
-        }
-
-        // Validate hall name uniqueness
-        if (hallRepository.existsByHallName(hall.getHallName())) {
-            throw new RuntimeException("Hall with name " + hall.getHallName() + " already exists");
-        }
-
-        // Set default values if not provided
-        if (hall.getCurrentOccupancy() == null) {
-            hall.setCurrentOccupancy(0);
-        }
-        if (hall.getIsActive() == null) {
-            hall.setIsActive(true);
-        }
-
-        return hallRepository.save(hall);
+   public Hall createHall(Hall hall) {
+    // Validate required fields
+    if (hall.getHallCode() == null || hall.getHallCode().trim().isEmpty()) {
+        throw new RuntimeException("Hall code is required");
+    }
+    if (hall.getHallName() == null || hall.getHallName().trim().isEmpty()) {
+        throw new RuntimeException("Hall name is required");
+    }
+    if (hall.getType() == null) {
+        throw new RuntimeException("Hall type is required");
+    }
+    if (hall.getCapacity() == null || hall.getCapacity() <= 0) {
+        throw new RuntimeException("Capacity must be greater than 0");
     }
 
+    // Set hallShortName to hallName if not provided
+    if (hall.getHallShortName() == null) {
+        hall.setHallShortName(hall.getHallName());
+    }
+
+    // Validate hall code uniqueness
+    if (hallRepository.existsByHallCode(hall.getHallCode())) {
+        throw new RuntimeException("Hall with code '" + hall.getHallCode() + "' already exists");
+    }
+
+    // Validate hall name uniqueness
+    if (hallRepository.existsByHallName(hall.getHallName())) {
+        throw new RuntimeException("Hall with name '" + hall.getHallName() + "' already exists");
+    }
+
+    // Handle long image URLs
+    if (hall.getImageUrl() != null && hall.getImageUrl().length() > 500) {
+        hall.setImageUrl(hall.getImageUrl().substring(0, 500));
+    }
+
+    // Set default values if not provided
+    if (hall.getCurrentOccupancy() == null) {
+        hall.setCurrentOccupancy(0);
+    }
+    if (hall.getIsActive() == null) {
+        hall.setIsActive(true);
+    }
+    if (hall.getCreatedAt() == null) {
+        hall.setCreatedAt(LocalDateTime.now());
+    }
+    if (hall.getUpdatedAt() == null) {
+        hall.setUpdatedAt(LocalDateTime.now());
+    }
+
+    return hallRepository.save(hall);
+}
     public Hall updateHall(Long id, Hall hallDetails) {
         Optional<Hall> optionalHall = hallRepository.findById(id);
         if (optionalHall.isEmpty()) {

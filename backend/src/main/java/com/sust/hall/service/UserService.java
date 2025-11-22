@@ -94,16 +94,16 @@ public class UserService {
     }
 
     
-    // public User createUser(User user) {
-    //     if (userRepository.existsByEmail(user.getEmail())) {
-    //         throw new RuntimeException("Email already exists: " + user.getEmail());
-    //     }
+    public User createUser(User user) {
+        if (userRepository.existsByEmail(user.getEmail())) {
+            throw new RuntimeException("Email already exists: " + user.getEmail());
+        }
         
-    //     if (user.getPassword() != null && !user.getPassword().isEmpty()) {
-    //         user.setPassword(passwordEncoder.encode(user.getPassword()));
-    //     }
-    //     return userRepository.save(user);
-    // }
+        if (user.getPassword() != null && !user.getPassword().isEmpty()) {
+            user.setPassword(passwordEncoder.encode(user.getPassword()));
+        }
+        return userRepository.save(user);
+    }
 
     public User updateUser(Long id, User userDetails) {
         User existingUser = getUserById(id);

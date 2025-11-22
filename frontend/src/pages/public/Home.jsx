@@ -1,48 +1,43 @@
 import React, { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
 import { ArrowRight, ArrowLeft, Loader2, Eye } from "lucide-react";
+import axios from 'axios';
 import Feature from "../../components/Feature";
-
+import Footer from "../../components/common/Footer";
 const Home = () => {
   const [currentSlide, setCurrentSlide] = useState(0);
   const [halls, setHalls] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [error, setError] = useState(null);
+  const [error, setError] = useState(null); 
 
-  // Fetch halls data from backend
-  useEffect(() => {
-    const fetchHallsData = async () => {
-      try {
-        setLoading(true);
-        const response = await fetch('http://localhost:8080/api/halls');
-        
-        if (!response.ok) {
-          throw new Error('Failed to fetch halls data');
-        }
-        if(!response.empty()){
-        const hallsData = await response.json();
-        setHalls(hallsData);
-        setError(null);
-        }
-        
-      } catch (err) {
-        console.error('Error fetching halls data:', err);
-        setError(err.message);
-      } finally {
-        setLoading(false);
-      }
-    };
+ useEffect(() => {
+  const fetchHallsData = async () => {
+    try {
+      setLoading(true);
+      const response = await axios.get('http://localhost:8080/api/halls');
+      
+      setHalls(response.data);
+      setError(null);
 
-    fetchHallsData();
-  }, []);
+    } catch (err) {
+      console.error('Error fetching halls data:', err);
+      setError(err.response?.data?.message || err.message);
+    } finally {
+      setLoading(false);
+    }
+  };
+  fetchHallsData();
+}, []);
+  
 
-  // Auto-slide carousel
+
+  
   useEffect(() => {
     if (halls.length === 0) return;
     
     const timer = setInterval(() => {
       setCurrentSlide((prev) => (prev + 1) % halls.length);
-    }, 5000);
+    }, 3000);
     return () => clearInterval(timer);
   }, [halls.length]);
 
@@ -139,7 +134,7 @@ const Home = () => {
                   <div key={hall.id || index} className="w-full flex-shrink-0">
                     <div className="relative h-96 md:h-[500px]">
                       <img
-                        src={hall.imageUrl || "https://images.unsplash.com/photo-1562774053-701939374585?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80"}
+                        src={hall.imageUrl}
                         alt={hall.hallName}
                         className="w-full h-full object-cover"
                       />
@@ -149,7 +144,7 @@ const Home = () => {
                             {hall.hallName} ({hall.hallCode})
                           </h3>
                           <p className="text-lg text-gray-200">
-                            {hall.description || "Comfortable residential facility with modern amenities."}
+                            {hall.description}
                           </p>
                         </div>
                       </div>
@@ -193,34 +188,9 @@ const Home = () => {
         </div>
       </section>
 
-      {/* What You Can Do Section - Using the new component */}
+      
       <Feature />
-
-      {/* CTA Section */}
-      <section className="py-16 bg-gradient-to-r from-[#00df9a] to-green-500">
-        <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
-          <h2 className="text-3xl md:text-4xl font-bold text-white mb-6">
-            Ready to Get Started?
-          </h2>
-          <p className="text-xl text-white/90 mb-8 max-w-2xl mx-auto">
-            Join thousands of SUST students managing their hall activities through our platform
-          </p>
-          <div className="flex flex-col sm:flex-row gap-4 justify-center">
-            <Link
-              to="/login"
-              className="bg-white text-black px-8 py-4 rounded-lg font-bold text-lg hover:bg-gray-100 transition-all duration-300 transform hover:scale-105"
-            >
-              Access Your Account
-            </Link>
-            <Link
-              to="/register"
-              className="border-2 border-white text-white px-8 py-4 rounded-lg font-bold text-lg hover:bg-white hover:text-black transition-all duration-300 transform hover:scale-105"
-            >
-              Create New Account
-            </Link>
-          </div>
-        </div>
-      </section>
+      <Footer />
     </div>
   );
 };

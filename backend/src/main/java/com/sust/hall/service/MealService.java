@@ -13,10 +13,15 @@ import java.time.LocalDateTime;
 import java.util.List;
 import java.util.stream.Collectors;
 import jakarta.persistence.EntityNotFoundException;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import java.util.Optional;
 
 @Service
 @Transactional
 public class MealService {
+
+    private static final Logger logger = LoggerFactory.getLogger(MealService.class); // ADD THIS LINE
 
     @Autowired
     private MealRepository mealRepository;
@@ -39,6 +44,15 @@ public class MealService {
                 .collect(Collectors.toList());
     }
 
+    // Get meals by hall name
+    public List<MealDTO> getMealsByHallName(String hallName) {
+        Hall hall = hallRepository.findByHallName(hallName)
+                .orElseThrow(() -> new EntityNotFoundException("Hall not found with name: " + hallName));
+        return mealRepository.findByHallId(hall.getId()).stream()
+                .map(this::convertToDTO)
+                .collect(Collectors.toList());
+    }
+
     // Get meals by hall and meal type
     public List<MealDTO> getMealsByHallAndType(Long hallId, MealType mealType) {
         validateHallExists(hallId);
@@ -47,7 +61,16 @@ public class MealService {
                 .collect(Collectors.toList());
     }
 
-    // Get today's meals
+    // Get meals by hall name and meal type
+    public List<MealDTO> getMealsByHallNameAndType(String hallName, MealType mealType) {
+        Hall hall = hallRepository.findByHallName(hallName)
+                .orElseThrow(() -> new EntityNotFoundException("Hall not found with name: " + hallName));
+        return mealRepository.findByHallIdAndMealType(hall.getId(), mealType).stream()
+                .map(this::convertToDTO)
+                .collect(Collectors.toList());
+    }
+
+    // Get today's meals by hall ID
     public List<MealDTO> getTodaysMeals(Long hallId) {
         validateHallExists(hallId);
         return mealRepository.findTodaysMealsByHallId(hallId).stream()
@@ -55,10 +78,62 @@ public class MealService {
                 .collect(Collectors.toList());
     }
 
+    // Get today's meals by hall name
+    public List<MealDTO> getTodaysMealsByHallName(String hallName) {
+        try {
+            logger.info("Looking for hall with name: '{}'", hallName);
+            
+            // Try exact match first
+            Optional<Hall> hallOpt = hallRepository.findByHallName(hallName);
+            
+            // If not found, try case-insensitive search
+            if (hallOpt.isEmpty()) {
+                logger.info("Exact match not found, trying case-insensitive search...");
+                List<Hall> allHalls = hallRepository.findAll();
+                hallOpt = allHalls.stream()
+                    .filter(hall -> hall.getHallName().equalsIgnoreCase(hallName))
+                    .findFirst();
+            }
+            
+            if (hallOpt.isEmpty()) {
+                logger.error("Hall not found with name: '{}'", hallName);
+                List<String> availableHalls = hallRepository.findAll().stream()
+                    .map(Hall::getHallName)
+                    .collect(Collectors.toList());
+                logger.info("Available halls: {}", availableHalls);
+                throw new EntityNotFoundException("Hall not found with name: " + hallName);
+            }
+            
+            Hall hall = hallOpt.get();
+            logger.info("Found hall: {} (ID: {})", hall.getHallName(), hall.getId());
+            
+            // Get today's meals
+            List<Meal> meals = mealRepository.findTodaysMealsByHallId(hall.getId());
+            logger.info("Found {} meals for today in hall: {}", meals.size(), hall.getHallName());
+            
+            return meals.stream()
+                    .map(this::convertToDTO)
+                    .collect(Collectors.toList());
+            
+        } catch (Exception e) {
+            logger.error("Error in getTodaysMealsByHallName for hall: '{}'", hallName, e);
+            throw e;
+        }
+    }
+
     // Get meals by date range
     public List<MealDTO> getMealsByDateRange(Long hallId, LocalDateTime startDate, LocalDateTime endDate) {
         validateHallExists(hallId);
         return mealRepository.findMealsByHallAndDateRange(hallId, startDate, endDate).stream()
+                .map(this::convertToDTO)
+                .collect(Collectors.toList());
+    }
+
+    // Get meals by date range and hall name
+    public List<MealDTO> getMealsByDateRangeAndHallName(String hallName, LocalDateTime startDate, LocalDateTime endDate) {
+        Hall hall = hallRepository.findByHallName(hallName)
+                .orElseThrow(() -> new EntityNotFoundException("Hall not found with name: " + hallName));
+        return mealRepository.findMealsByHallAndDateRange(hall.getId(), startDate, endDate).stream()
                 .map(this::convertToDTO)
                 .collect(Collectors.toList());
     }
@@ -70,10 +145,19 @@ public class MealService {
                 .collect(Collectors.toList());
     }
 
-    // Get available meals by hall
+    // Get available meals by hall ID
     public List<MealDTO> getAvailableMealsByHall(Long hallId) {
         validateHallExists(hallId);
         return mealRepository.findAvailableMealsByHallId(hallId).stream()
+                .map(this::convertToDTO)
+                .collect(Collectors.toList());
+    }
+
+    // Get available meals by hall name
+    public List<MealDTO> getAvailableMealsByHallName(String hallName) {
+        Hall hall = hallRepository.findByHallName(hallName)
+                .orElseThrow(() -> new EntityNotFoundException("Hall not found with name: " + hallName));
+        return mealRepository.findAvailableMealsByHallId(hall.getId()).stream()
                 .map(this::convertToDTO)
                 .collect(Collectors.toList());
     }
@@ -150,14 +234,21 @@ public class MealService {
         return convertToDTO(meal);
     }
 
-    // Validate hall exists
+    // Validate hall exists by ID
     private void validateHallExists(Long hallId) {
         if (!hallRepository.existsById(hallId)) {
             throw new EntityNotFoundException("Hall not found with ID: " + hallId);
         }
     }
 
-    // Convert Meal to DTO
+    // Validate hall exists by name
+    private void validateHallExists(String hallName) {
+        if (!hallRepository.existsByHallName(hallName)) {
+            throw new EntityNotFoundException("Hall not found with name: " + hallName);
+        }
+    }
+
+    
     private MealDTO convertToDTO(Meal meal) {
         MealDTO dto = new MealDTO();
         dto.setId(meal.getId());

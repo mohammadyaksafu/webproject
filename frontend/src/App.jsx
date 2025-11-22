@@ -12,8 +12,6 @@ export default function App() {
           {routes.map((r) => (
             <Route key={r.path} path={r.path} element={r.element} />
           ))}
-
-          {/* fallback (optional) */}
           <Route path="*" element={<div className="p-10">Page not found</div>} />
         </Routes>
       </main>

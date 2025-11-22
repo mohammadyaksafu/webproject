@@ -3,6 +3,7 @@ import { useNavigate } from "react-router-dom";
 import AdminDashboard from "./admin/AdminDashboard";
 import StudentDashboard from "./student/StudentDashboard";
 import StaffDashboard from "./stuff/StaffDashboard";
+import CanteenManagerDashboard from "./canteen/CanteenManagerDashboard";
 
 const Dashboard = () => {
   const navigate = useNavigate();
@@ -13,8 +14,8 @@ const Dashboard = () => {
       STUDENT: <StudentDashboard />,
       STAFF: <StaffDashboard />,
       ADMIN: <AdminDashboard />,
-      CANTEEN_MANAGER: <div>Coming Soon - Canteen Manager Dashboard</div>,
-      TEACHER: <div>Coming Soon - Teacher Dashboard</div>
+      CANTEEN_MANAGER: <CanteenManagerDashboard />,
+      TEACHER: <AdminDashboard />
     };
 
     return dashboards[role] || dashboards.STUDENT;
@@ -33,9 +34,7 @@ const Dashboard = () => {
 
   return (
     <div>
-
         <RoleDashboard role={user.role} userName={user.name} />
-        
     </div>
   );
 };

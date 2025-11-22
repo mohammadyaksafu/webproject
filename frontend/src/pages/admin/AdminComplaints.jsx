@@ -67,7 +67,7 @@ export default function AdminComplaints() {
         updateData
       );
 
-      // Update the complaint in the local state
+      
       setComplaints(prev => prev.map(c => 
         c.id === complaintId ? response.data : c
       ));
